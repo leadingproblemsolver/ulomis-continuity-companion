@@ -86,6 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Ulomis is a continuity companion that keeps the thread of your plans, projects, conversations and responsibilities.",
       },
       { name: "author", content: "Ulomis" },
+      { name: "application-name", content: "Ulomis" },
+      { property: "og:site_name", content: "Ulomis" },
       { property: "og:title", content: "Ulomis — Your digital life, continued." },
       {
         property: "og:description",
@@ -115,12 +117,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+/**
+ * Brand metadata. This is the one place the Arabic form of the name belongs
+ * while the UI is English-only — as a machine-readable alternate name, not as
+ * on-screen copy. A localised Arabic build would surface it in the UI instead.
+ */
+const brandJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Ulomis",
+  alternateName: ["أولوميس", "Ulomis (oo-LO-miss)"],
+  description: "A continuity companion for your digital life. Ulomis keeps the thread.",
+});
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: brandJsonLd }} />
       </head>
       <body>
         {children}
