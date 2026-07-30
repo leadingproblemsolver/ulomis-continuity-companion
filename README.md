@@ -122,3 +122,9 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Deployment
+
+For hosting outside Lovable (e.g. Netlify with a custom domain), see
+[`DEPLOY.md`](./DEPLOY.md). Early-access signups persist to Supabase — see
+[`supabase/README.md`](./supabase/README.md) for the schema and RLS setup.
