@@ -1,29 +1,9 @@
+import { principles as defaultPrinciples, type TrustPrinciple } from "@/data/principles";
+import { Reveal } from "./Reveal";
 import { UCard } from "./Card";
 import { cn } from "@/lib/utils";
 
-export interface TrustPrinciple {
-  title: string;
-  body: string;
-}
-
-export const defaultPrinciples: TrustPrinciple[] = [
-  {
-    title: "It keeps a thread, not a profile",
-    body: "Ulomis holds the shape of what you were doing so you can resume it. It does not build a picture of who you are.",
-  },
-  {
-    title: "Nothing is asserted that you didn't say",
-    body: "Settled points, open loops, and corrections come from the thread itself. Ulomis does not invent the middle.",
-  },
-  {
-    title: "Corrections stay visible",
-    body: "When something changed, the change is shown rather than quietly overwritten. You can see what you decided against.",
-  },
-  {
-    title: "You end the thread",
-    body: "A thread closes when you close it. Continuity is something you keep, not something kept on you.",
-  },
-];
+export type { TrustPrinciple };
 
 export function TrustPrinciples({
   principles = defaultPrinciples,
@@ -33,17 +13,17 @@ export function TrustPrinciples({
   className?: string;
 }) {
   return (
-    <ol className={cn("grid gap-4 sm:grid-cols-2", className)}>
-      {principles.map((p, i) => (
-        <li key={p.title}>
+    <ol className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}>
+      {principles.map((principle, index) => (
+        <Reveal as="li" key={principle.title} delay={index * 80}>
           <UCard variant="quiet" padding="lg" className="h-full">
             <p className="font-display text-sm font-semibold text-primary">
-              {String(i + 1).padStart(2, "0")}
+              {String(index + 1).padStart(2, "0")}
             </p>
-            <h3 className="mt-2 text-base font-semibold leading-snug">{p.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+            <h3 className="mt-2 text-base leading-snug font-semibold">{principle.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{principle.body}</p>
           </UCard>
-        </li>
+        </Reveal>
       ))}
     </ol>
   );

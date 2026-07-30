@@ -2,28 +2,32 @@ import type { ComponentProps, ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const cardVariants = cva("rounded-3xl transition-all duration-300 [transition-timing-function:var(--ease-continuity)]", {
-  variants: {
-    variant: {
-      plain: "bg-surface border border-border shadow-[var(--shadow-soft)]",
-      raised: "bg-surface-raised border border-border shadow-[var(--shadow-lift)]",
-      quiet: "bg-accent/50 border border-transparent",
-      outline: "border border-dashed border-border bg-transparent",
-      thread: "border border-primary/25 bg-surface shadow-[var(--shadow-soft)] relative overflow-hidden",
+const cardVariants = cva(
+  "rounded-3xl transition-all duration-300 [transition-timing-function:var(--ease-continuity)]",
+  {
+    variants: {
+      variant: {
+        plain: "bg-surface border border-border shadow-[var(--shadow-soft)]",
+        raised: "bg-surface-raised border border-border shadow-[var(--shadow-lift)]",
+        quiet: "bg-accent/50 border border-transparent",
+        outline: "border border-dashed border-border bg-transparent",
+        thread:
+          "border border-primary/25 bg-surface shadow-[var(--shadow-soft)] relative overflow-hidden",
+      },
+      padding: {
+        none: "",
+        sm: "p-4",
+        md: "p-5 sm:p-6",
+        lg: "p-6 sm:p-8",
+      },
+      interactive: {
+        true: "hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]",
+        false: "",
+      },
     },
-    padding: {
-      none: "",
-      sm: "p-4",
-      md: "p-5 sm:p-6",
-      lg: "p-6 sm:p-8",
-    },
-    interactive: {
-      true: "hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]",
-      false: "",
-    },
+    defaultVariants: { variant: "plain", padding: "md", interactive: false },
   },
-  defaultVariants: { variant: "plain", padding: "md", interactive: false },
-});
+);
 
 export function UCard({
   className,

@@ -45,6 +45,58 @@ export function USelect({ className, children, ...props }: ComponentProps<"selec
   );
 }
 
+/**
+ * Single-select chip group. Used for the optional "Where do you lose context
+ * most?" question, where a row of chips converts better than a select.
+ *
+ * Implemented as real radio inputs so keyboard arrow-key navigation and form
+ * semantics come for free.
+ */
+export function UChipGroup({
+  name,
+  options,
+  value,
+  onChange,
+  className,
+}: {
+  name: string;
+  options: readonly string[];
+  value: string | null;
+  onChange: (value: string | null) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      {options.map((option) => {
+        const selected = value === option;
+        return (
+          <label
+            key={option}
+            className={cn(
+              "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-all duration-300 [transition-timing-function:var(--ease-continuity)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background",
+              selected
+                ? "border-primary/45 bg-primary/10 text-foreground"
+                : "border-border bg-surface text-muted-foreground hover:border-primary/30 hover:text-foreground",
+            )}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={selected}
+              // Re-selecting the current chip clears it, keeping the field optional.
+              onClick={() => selected && onChange(null)}
+              onChange={() => onChange(option)}
+              className="sr-only"
+            />
+            {option}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 export function UCheckbox({
   label,
   className,

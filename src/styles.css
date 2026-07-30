@@ -8,16 +8,21 @@
  * Ulomis design system.
  * Brand: continuity companion. Calm, threaded, never neon.
  *
- * Brand palette (source hex -> oklch token):
- *   Primary blue      #315FDD
- *   Quiet sky         #AFCBFF
- *   Warm white        #F8FAFD
- *   Midnight          #10182B
- *   Confirmed aqua    #7ADBCB
- *   Open-loop amber   #E6AE5C
- *   Correction coral  #E37D79
- *   Primary text      #172036
- *   Secondary text    #667089
+ * Brand palette. Each source hex is stored as its exact oklch equivalent so the
+ * tokens below can be traced back to the brand spec without guesswork.
+ *
+ *   Primary blue      #315FDD  oklch(0.531 0.199 265.0)  -> --primary
+ *   Quiet sky         #AFCBFF  oklch(0.840 0.079 262.6)  -> --sky
+ *   Warm white        #F8FAFD  oklch(0.984 0.005 258.3)  -> --background (light)
+ *   Midnight          #10182B  oklch(0.212 0.040 265.8)  -> --background (dark)
+ *   Confirmed aqua    #7ADBCB  oklch(0.827 0.095 182.0)  -> --confirmed
+ *   Open-loop amber   #E6AE5C  oklch(0.787 0.119 75.0)   -> --openloop
+ *   Correction coral  #E37D79  oklch(0.702 0.127 23.2)   -> --correction
+ *   Primary text      #172036  oklch(0.247 0.044 266.3)  -> --foreground (light)
+ *   Secondary text    #667089  oklch(0.546 0.041 267.9)  -> --muted-foreground
+ *
+ * Semantic discipline: aqua means confirmed, amber means an open loop, coral
+ * means something was corrected. Never decorative, never neon.
  */
 
 @theme inline {
@@ -63,6 +68,16 @@
   --color-openloop-foreground: var(--openloop-foreground);
   --color-correction: var(--correction);
   --color-correction-foreground: var(--correction-foreground);
+
+  /*
+   * "-foreground" pairs with its own coloured chip. "-ink" is the same meaning
+   * drawn directly on a page surface, so it has to invert between themes —
+   * dark on warm white, light on midnight. Use ink for text and icons that sit
+   * on the background rather than on a tinted block.
+   */
+  --color-confirmed-ink: var(--confirmed-ink);
+  --color-openloop-ink: var(--openloop-ink);
+  --color-correction-ink: var(--correction-ink);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
 
@@ -85,45 +100,49 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.982 0.005 250);
-  --foreground: oklch(0.245 0.035 265);
+  --background: oklch(0.984 0.005 258.3);
+  --foreground: oklch(0.247 0.044 266.3);
   --surface: oklch(1 0 0);
-  --surface-raised: oklch(0.995 0.003 250);
+  --surface-raised: oklch(0.995 0.003 258.3);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.245 0.035 265);
+  --card-foreground: oklch(0.247 0.044 266.3);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.245 0.035 265);
+  --popover-foreground: oklch(0.247 0.044 266.3);
 
-  --primary: oklch(0.535 0.184 265);
-  --primary-foreground: oklch(0.99 0.004 250);
+  --primary: oklch(0.531 0.199 265);
+  --primary-foreground: oklch(0.99 0.004 258.3);
 
-  --secondary: oklch(0.955 0.014 258);
-  --secondary-foreground: oklch(0.245 0.035 265);
+  --secondary: oklch(0.955 0.014 262.6);
+  --secondary-foreground: oklch(0.247 0.044 266.3);
 
-  --muted: oklch(0.958 0.01 258);
-  --muted-foreground: oklch(0.545 0.038 266);
+  --muted: oklch(0.958 0.01 262.6);
+  --muted-foreground: oklch(0.546 0.041 267.9);
 
-  --accent: oklch(0.938 0.036 262);
+  --accent: oklch(0.941 0.032 262.6);
   --accent-foreground: oklch(0.36 0.13 265);
 
-  --sky: oklch(0.838 0.072 264);
+  --sky: oklch(0.84 0.079 262.6);
   --sky-foreground: oklch(0.28 0.07 265);
-  --thread: oklch(0.535 0.184 265);
+  --thread: oklch(0.531 0.199 265);
 
-  --confirmed: oklch(0.836 0.088 181);
-  --confirmed-foreground: oklch(0.35 0.06 190);
-  --openloop: oklch(0.795 0.108 76);
-  --openloop-foreground: oklch(0.38 0.08 70);
-  --correction: oklch(0.712 0.113 22);
-  --correction-foreground: oklch(0.38 0.1 22);
+  --confirmed: oklch(0.827 0.095 182);
+  --confirmed-foreground: oklch(0.35 0.062 190);
+  --openloop: oklch(0.787 0.119 75);
+  --openloop-foreground: oklch(0.38 0.082 70);
+  --correction: oklch(0.702 0.127 23.2);
+  --correction-foreground: oklch(0.38 0.1 23.2);
 
-  --destructive: oklch(0.712 0.113 22);
-  --destructive-foreground: oklch(0.99 0.004 250);
+  --confirmed-ink: oklch(0.47 0.085 182);
+  --openloop-ink: oklch(0.5 0.11 70);
+  --correction-ink: oklch(0.51 0.15 23.2);
 
-  --border: oklch(0.912 0.014 258);
-  --input: oklch(0.912 0.014 258);
-  --ring: oklch(0.535 0.184 265);
+  --destructive: oklch(0.702 0.127 23.2);
+  --destructive-foreground: oklch(0.99 0.004 258.3);
+
+  --border: oklch(0.912 0.014 262.6);
+  --input: oklch(0.912 0.014 262.6);
+  --ring: oklch(0.531 0.199 265);
 
   --gradient-thread: linear-gradient(
     135deg,
@@ -142,41 +161,45 @@
 }
 
 .dark {
-  --background: oklch(0.203 0.031 264);
-  --foreground: oklch(0.955 0.008 250);
-  --surface: oklch(0.243 0.033 264);
-  --surface-raised: oklch(0.275 0.035 264);
+  --background: oklch(0.212 0.04 265.8);
+  --foreground: oklch(0.955 0.008 258.3);
+  --surface: oklch(0.249 0.04 265.8);
+  --surface-raised: oklch(0.282 0.041 265.8);
 
-  --card: oklch(0.243 0.033 264);
-  --card-foreground: oklch(0.955 0.008 250);
-  --popover: oklch(0.243 0.033 264);
-  --popover-foreground: oklch(0.955 0.008 250);
+  --card: oklch(0.249 0.04 265.8);
+  --card-foreground: oklch(0.955 0.008 258.3);
+  --popover: oklch(0.249 0.04 265.8);
+  --popover-foreground: oklch(0.955 0.008 258.3);
 
-  --primary: oklch(0.68 0.147 264);
-  --primary-foreground: oklch(0.16 0.03 264);
+  --primary: oklch(0.685 0.16 265);
+  --primary-foreground: oklch(0.165 0.035 265.8);
 
-  --secondary: oklch(0.295 0.033 264);
-  --secondary-foreground: oklch(0.955 0.008 250);
+  --secondary: oklch(0.3 0.04 265.8);
+  --secondary-foreground: oklch(0.955 0.008 258.3);
 
-  --muted: oklch(0.295 0.033 264);
-  --muted-foreground: oklch(0.72 0.03 262);
+  --muted: oklch(0.3 0.04 265.8);
+  --muted-foreground: oklch(0.723 0.032 267.9);
 
-  --accent: oklch(0.325 0.05 264);
+  --accent: oklch(0.33 0.055 265.8);
   --accent-foreground: oklch(0.9 0.05 264);
 
-  --sky: oklch(0.78 0.075 264);
-  --sky-foreground: oklch(0.2 0.03 264);
-  --thread: oklch(0.72 0.13 264);
+  --sky: oklch(0.78 0.079 262.6);
+  --sky-foreground: oklch(0.2 0.03 265.8);
+  --thread: oklch(0.725 0.14 265);
 
-  --confirmed: oklch(0.79 0.09 181);
-  --confirmed-foreground: oklch(0.19 0.04 190);
-  --openloop: oklch(0.775 0.11 76);
-  --openloop-foreground: oklch(0.2 0.04 70);
-  --correction: oklch(0.72 0.115 22);
-  --correction-foreground: oklch(0.2 0.04 22);
+  --confirmed: oklch(0.79 0.098 182);
+  --confirmed-foreground: oklch(0.19 0.042 190);
+  --openloop: oklch(0.775 0.12 75);
+  --openloop-foreground: oklch(0.2 0.042 70);
+  --correction: oklch(0.715 0.128 23.2);
+  --correction-foreground: oklch(0.2 0.042 23.2);
 
-  --destructive: oklch(0.72 0.115 22);
-  --destructive-foreground: oklch(0.16 0.03 264);
+  --confirmed-ink: oklch(0.827 0.095 182);
+  --openloop-ink: oklch(0.787 0.119 75);
+  --correction-ink: oklch(0.76 0.128 23.2);
+
+  --destructive: oklch(0.715 0.128 23.2);
+  --destructive-foreground: oklch(0.165 0.035 265.8);
 
   --border: oklch(1 0 0 / 11%);
   --input: oklch(1 0 0 / 15%);
@@ -264,8 +287,49 @@
   }
 }
 
+@keyframes ulomis-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
 @utility animate-rise {
   animation: ulomis-rise 0.6s var(--ease-continuity) both;
+}
+
+/*
+ * Ribbon drawing. Paths using this must set pathLength="1" so the dash maths
+ * stays resolution-independent and needs no runtime getTotalLength().
+ */
+@utility thread-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  --dash: 1;
+  animation: ulomis-draw 1.15s var(--ease-continuity) both;
+}
+
+@utility thread-undrawn {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+/* Scattered fragments breathe very slightly so the pre-restore state feels alive. */
+@utility animate-drift {
+  animation: ulomis-drift 6s ease-in-out infinite;
+}
+
+@utility focus-ring {
+  outline: none;
+
+  &:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 4px var(--ring);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

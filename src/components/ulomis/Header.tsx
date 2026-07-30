@@ -1,32 +1,49 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { UlomisMark } from "./UlomisMark";
 import { UButton } from "./Button";
 import { useTheme } from "./theme";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { label: "How it holds", href: "#continuity" },
-  { label: "Scenarios", href: "#scenarios" },
-  { label: "Principles", href: "#principles" },
-  { label: "Pick up a thread", href: "#thread" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Examples", href: "#demo" },
+  { label: "Trust", href: "#trust" },
 ];
+
+/**
+ * Ulomis isn't open yet, so "Log in" has nowhere honest to go. Rather than a
+ * dead route, it says so and points at the only door that exists.
+ */
+function useLoginNotice() {
+  return () => {
+    track("ulomis_cta_clicked", { cta: "login" });
+    toast("Ulomis isn't open yet", {
+      description: "There's nothing to log into for now — early access opens first.",
+      action: {
+        label: "Join early",
+        onClick: () =>
+          document.getElementById("early-access")?.scrollIntoView({ behavior: "smooth" }),
+      },
+    });
+  };
+}
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
+  const onLogin = useLoginNotice();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-          <UlomisMark size={30} state="idle" />
+          <UlomisMark size={30} state="idle" decorative />
           <span className="truncate font-display text-base font-semibold tracking-tight">
             Ulomis
-          </span>
-          <span className="hidden text-sm text-muted-foreground sm:inline" dir="rtl">
-            أولوميس
           </span>
         </Link>
 
@@ -42,7 +59,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 lg:ml-3">
+        <div className="ml-auto flex items-center gap-1.5 lg:ml-3 lg:gap-2">
           <UButton
             variant="ghost"
             size="icon"
@@ -51,9 +68,28 @@ export function Header() {
           >
             {theme === "dark" ? <Sun /> : <Moon />}
           </UButton>
-          <UButton variant="primary" size="sm" className="hidden sm:inline-flex" asChild>
-            <a href="#thread">Keep the thread</a>
+
+          <UButton
+            variant="link"
+            size="sm"
+            className="hidden text-muted-foreground sm:inline-flex"
+            onClick={onLogin}
+          >
+            Log in
           </UButton>
+
+          <UButton
+            variant="primary"
+            size="sm"
+            className="hidden sm:inline-flex"
+            asChild
+            onClick={() =>
+              track("ulomis_cta_clicked", { cta: "join_early_access", placement: "header" })
+            }
+          >
+            <a href="#early-access">Join early access</a>
+          </UButton>
+
           <UButton
             variant="ghost"
             size="icon"
@@ -86,6 +122,27 @@ export function Header() {
                 </a>
               </li>
             ))}
+            <li>
+              <a
+                href="#early-access"
+                onClick={() => setOpen(false)}
+                className="block rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-accent"
+              >
+                Join early access
+              </a>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onLogin();
+                }}
+                className="block w-full rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                Log in
+              </button>
+            </li>
           </ul>
         </nav>
       </div>
