@@ -100,8 +100,8 @@ function Index() {
               <div className="relative">
                 <div className="absolute -inset-8 rounded-full bg-sky/20 blur-2xl" aria-hidden />
                 <UlomisMark
-                  size="min(72vw, 320px)"
-                  state="holding"
+                  size="min(64vw, 300px)"
+                  state="idle"
                   eyes
                   tail
                   className="relative"
