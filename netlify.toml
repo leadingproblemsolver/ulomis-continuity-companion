@@ -1,15 +1,17 @@
+# Must stay in sync with `nitro.output.publicDir` in vite.config.ts — if these
+# disagree the deploy fails with "Deploy directory does not exist".
+#
+# The SSR function is emitted separately to .netlify/functions-internal/server
+# by Nitro's netlify preset, and declares `path: "/*"` with `preferStatic: true`
+# in its own code, so no _redirects rule is needed: static files under `publish`
+# are served directly and everything else falls through to SSR.
 [build]
-  command = "bun install && bun run build:static"
-  publish = "dist/client"
+  command = "bun run build"
+  publish = "dist/public"
 
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    # Vite fingerprints every filename in dist/assets, so these are safe to
-    # cache forever — a content change always ships under a new filename.
+    # Vite fingerprints every filename in assets/, so these are safe to cache
+    # forever — a content change always ships under a new filename.
     Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"

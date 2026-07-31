@@ -1,29 +1,56 @@
 # Deploying to Netlify
 
-Ulomis ships as a fully static site — no server runs at request time. The
-only thing that isn't static is the early-access form, which talks straight
-from the browser to Supabase using the public/anon key; Row Level Security is
-what keeps that safe (see `supabase/README.md`).
+Ulomis is a TanStack Start app. On Netlify it deploys as server-rendered
+pages via a Netlify Function, with static assets served straight from the
+CDN. The early-access form talks directly from the browser to Supabase using
+the public/anon key; Row Level Security is what keeps that safe (see
+`supabase/README.md`).
 
-## Why a static export, not the framework's own build
+## How the build maps onto Netlify
 
-This is a TanStack Start app, and its normal production build goes through
-Nitro to produce a deployable server bundle — that's what Lovable's own
-hosting uses (Cloudflare Workers), and it's untouched by anything below.
+`bun run build` runs Vite, then Nitro. Nitro auto-detects the `netlify`
+preset when it sees Netlify's environment, and emits two things:
 
-Nitro's *own* prerender feature doesn't work here: it rebuilds a separate
-server bundle via raw rolldown, outside Vite's environment API, and TanStack
-Start's virtual modules (route tree, manifest, server entry) don't resolve
-there — every route 404s. So for Netlify we skip Nitro entirely and use
-`scripts/build-static.mjs` instead, which calls the SSR bundle Vite already
-builds correctly, once, for `/` — the app's only route — and writes the
-response as `dist/client/index.html`. From that point on it's a plain static
-file: real `<title>`, meta tags, and JSON-LD baked in, no JS required to make
-the page meaningful to a crawler or a social-preview bot.
+| Output | Path | Purpose |
+|---|---|---|
+| Static assets | `dist/public/` | What `netlify.toml`'s `publish` points at. |
+| SSR function | `.netlify/functions-internal/server/` | Picked up automatically by Netlify's function bundler. |
 
-`vite.config.ts` detects Lovable's own sandbox (`LOVABLE_SANDBOX` /
-`DEV_SERVER__PROJECT_PATH`) and only skips Nitro outside it, so this doesn't
-change how Lovable's own preview/publish works.
+The function declares its own routing in code (`path: "/*"` with
+`preferStatic: true`, Netlify's Functions v2 config), so **no `_redirects`
+rule is needed** — a real file under `publish` wins, and anything else falls
+through to SSR. An empty `dist/public/_redirects` in the build output is
+expected, not a bug.
+
+### Two things that will silently break this
+
+1. **`publish` must equal `nitro.output.publicDir`.** These are set in two
+   different files (`netlify.toml` and `vite.config.ts`) and nothing enforces
+   agreement — a mismatch fails the deploy with *"Deploy directory
+   'x' does not exist"*. Both are currently `dist/public`.
+2. **Don't pin `nitro.output.serverDir`.** `vite.config.ts` deliberately
+   overrides only `publicDir`. Setting `output.dir` or `serverDir` pulls the
+   server bundle out of `.netlify/functions-internal/`, and the build still
+   *succeeds* — it just deploys with no function at all, so every non-static
+   request 404s.
+
+`vite.config.ts` gates all of this on not being inside Lovable's own sandbox
+(`LOVABLE_SANDBOX` / `DEV_SERVER__PROJECT_PATH`), which forces its own
+Cloudflare preset and output layout regardless. Lovable's preview and publish
+are unaffected by anything here.
+
+### Verifying the build locally
+
+Netlify's environment is what triggers the preset, so reproduce it with:
+
+```sh
+rm -rf dist .netlify node_modules/.nitro
+NETLIFY=true bun run build
+ls dist/public                          # assets, _headers, favicon, robots
+ls .netlify/functions-internal/server   # server.mjs must exist
+```
+
+If `.netlify/` is missing, the function won't deploy — see point 2 above.
 
 ## One-time setup
 
@@ -35,14 +62,28 @@ from).
 
 ### 2. Build settings
 
-`netlify.toml` already specifies these, so Netlify should pick them up
-automatically — listed here so they're not a mystery if you ever configure a
-site by hand instead:
+`netlify.toml` specifies both, so Netlify picks them up automatically:
 
 | Setting | Value |
 |---|---|
-| Build command | `bun install && bun run build:static` |
-| Publish directory | `dist/client` |
+| Build command | `bun run build` |
+| Publish directory | `dist/public` |
+
+> **Check the UI isn't overriding these.** Values set under **Site
+> configuration → Build & deploy → Build settings** take precedence over
+> `netlify.toml`, and Netlify's framework auto-detection can populate them
+> when a site is first connected. In the build log they appear *before*
+> `netlify.toml` is read:
+>
+> ```
+> Custom build command detected. Proceeding with the specified command: '...'
+> Custom publish path detected. Proceeding with the specified path: '...'
+> ```
+>
+> If those lines don't match the table above, clear both fields in the UI so
+> `netlify.toml` is the single source of truth. A stale UI publish path is
+> exactly what produces *"Deploy directory does not exist"* even when the
+> build itself succeeded.
 
 ### 3. Environment variables
 
@@ -75,9 +116,9 @@ automatically. There's no manual step, no separate asset upload.
 After it goes live:
 
 1. **View source** on the deployed URL (not just DevTools' rendered DOM) and
-   confirm the `<title>` and meta tags are real text, not placeholders — that
-   confirms `build-static.mjs` actually ran and produced real prerendered
-   HTML, not an empty SPA shell.
+   confirm the page copy, `<title>` and meta tags are present in the raw HTML.
+   That confirms SSR actually ran — if the function failed to deploy you'd
+   get a 404 or a bare shell instead.
 2. Run through the interactive demo (`#demo`) — all three scenarios, Confirm
    / Correct / Why / Dismiss.
 3. Submit the early-access form with a real address you can check, then in
@@ -88,10 +129,13 @@ After it goes live:
 
 ## If something breaks
 
-- **Build fails on `scripts/build-static.mjs`** — it throws loudly if the SSR
-  bundle returns anything other than a 200 for `/`, or if the response is
-  missing the expected `<title>Ulomis` text. Check the Netlify build log for
-  the specific error; it's designed not to ship a broken page silently.
+- **"Deploy directory 'x' does not exist"** — the build succeeded but
+  `publish` points somewhere Nitro didn't write. Check the UI override note
+  in step 2, and that `publish` still matches `nitro.output.publicDir`.
+- **Site deploys but every page 404s** — the static assets shipped without
+  the SSR function. Confirm the build log contains *"Packaging Functions from
+  .netlify/functions-internal directory"*; if not, something is overriding
+  `nitro.output.serverDir` (see "Two things that will silently break this").
 - **Early-access submissions don't show up in Supabase** — check the two env
   vars are actually set on the Netlify site (not just in `.env.example`
   locally), and check the browser console for the `[ulomis] early access
