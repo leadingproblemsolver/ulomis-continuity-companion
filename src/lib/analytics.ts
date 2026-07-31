@@ -10,11 +10,15 @@
 export type UlomisEvent =
   | "ulomis_viewed"
   | "ulomis_cta_clicked"
-  | "ulomis_demo_started"
-  | "ulomis_demo_scenario_selected"
-  | "ulomis_demo_control_used"
-  | "ulomis_demo_completed"
-  | "ulomis_demo_dismissed"
+  | "ulomis_locale_changed"
+  // Restoration-journey funnel (see docs/journey-gaps.md for the full ladder
+  // this is meant to measure against).
+  | "journey_scenario_started"
+  | "journey_restored"
+  | "journey_uncertainty_inspected"
+  | "journey_correction_applied"
+  | "journey_contradiction_resolved"
+  | "journey_next_action_selected"
   | "ulomis_early_access_submitted"
   | "ulomis_referral_created";
 

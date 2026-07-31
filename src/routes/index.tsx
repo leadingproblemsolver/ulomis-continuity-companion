@@ -3,17 +3,14 @@ import { useEffect } from "react";
 import { Header } from "@/components/ulomis/Header";
 import { Footer } from "@/components/ulomis/Footer";
 import { MobileCta } from "@/components/ulomis/MobileCta";
-import { Section } from "@/components/ulomis/Section";
-import { Hero } from "@/components/landing/Hero";
-import { ProblemRecognition } from "@/components/landing/ProblemRecognition";
-import { CategoryShift } from "@/components/landing/CategoryShift";
 import { Benefits } from "@/components/landing/Benefits";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { Philosophy } from "@/components/landing/Philosophy";
 import { EvidenceStatus } from "@/components/landing/EvidenceStatus";
 import { EarlyAccess } from "@/components/landing/EarlyAccess";
-import { ContinuityDemo } from "@/components/demo/ContinuityDemo";
+import { RestorationJourney } from "@/components/journey/RestorationJourney";
+import { workJourney } from "@/data/journey";
 import { trackOnce } from "@/lib/analytics";
 
 const TITLE = "Ulomis — Your digital life, continued.";
@@ -42,18 +39,16 @@ function Index() {
       <Header />
 
       <main>
-        <Hero />
-        <ProblemRecognition />
-        <CategoryShift />
-
-        <Section
-          id="demo"
-          eyebrow="Interactive preview"
-          title="Where should Ulomis begin?"
-          lede="Pick a part of your life, then let Ulomis restore the thread. Nothing to sign up for — this runs on written scenarios, not on your data."
-        >
-          <ContinuityDemo />
-        </Section>
+        {/*
+          Scenes 1-7 of the guided restoration journey: recognition, the
+          scattered thread, restoring it, the delta, the correction/trust
+          test, and choosing what happens next. This replaces what used to be
+          a hero + three separate marketing sections — the product has to be
+          felt before it's explained, not the other way around.
+        */}
+        <div id="journey">
+          <RestorationJourney journey={workJourney} />
+        </div>
 
         <Benefits />
         <HowItWorks />

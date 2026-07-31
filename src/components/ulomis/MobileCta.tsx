@@ -1,30 +1,35 @@
 import { useEffect, useState } from "react";
 import { UButton } from "./Button";
+import { useLocale } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
  * Persistent mobile CTA.
  *
- * Appears once the hero's own buttons have scrolled away and hides again over
- * the early-access section, so it never covers the form it points at.
+ * Appears once the journey's own buttons have scrolled away and hides again
+ * over the early-access section, so it never covers the form it points at.
  */
 export function MobileCta() {
   const [visible, setVisible] = useState(false);
+  const { locale } = useLocale();
 
   useEffect(() => {
     const target = document.getElementById("early-access");
-    const hero = document.getElementById("problem");
+    const hero = document.getElementById("journey");
     if (!hero || typeof IntersectionObserver === "undefined") return;
 
     let pastHero = false;
     let atForm = false;
     const sync = () => setVisible(pastHero && !atForm);
 
-    // `boundingClientRect.top < 0` means the element has scrolled above the fold.
+    // `bottom < 0` means the whole journey block — not just its top edge —
+    // has scrolled above the viewport. Checking `isIntersecting` alone would
+    // make this true immediately on page load, since the journey starts right
+    // under the header and is trivially "intersecting" before any scroll.
     const heroObserver = new IntersectionObserver(
       ([entry]) => {
-        pastHero = entry.isIntersecting || entry.boundingClientRect.top < 0;
+        pastHero = entry.boundingClientRect.bottom < 0;
         sync();
       },
       { threshold: 0 },
@@ -65,7 +70,9 @@ export function MobileCta() {
           track("ulomis_cta_clicked", { cta: "meet_ulomis_early", placement: "mobile" })
         }
       >
-        <a href="#early-access">Meet Ulomis early</a>
+        <a href="#early-access">
+          {locale === "ar" ? "تعرّف على أولوميس مبكراً" : "Meet Ulomis early"}
+        </a>
       </UButton>
     </div>
   );

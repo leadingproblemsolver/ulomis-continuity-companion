@@ -234,6 +234,23 @@
     letter-spacing: -0.022em;
     text-wrap: balance;
   }
+
+  /*
+   * Sora/Manrope are Latin-only. Under Arabic, swap to Tajawal for both
+   * roles and drop the Latin letter-spacing tightening, which reads oddly
+   * against Arabic's connected letterforms.
+   */
+  html[dir="rtl"] body {
+    font-family: "Tajawal", var(--font-sans);
+  }
+
+  html[dir="rtl"] h1,
+  html[dir="rtl"] h2,
+  html[dir="rtl"] h3,
+  html[dir="rtl"] h4 {
+    font-family: "Tajawal", var(--font-display);
+    letter-spacing: normal;
+  }
 }
 
 @utility surface-panel {

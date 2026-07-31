@@ -1,30 +1,34 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { Globe, Menu, Moon, Sun, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UlomisMark } from "./UlomisMark";
 import { UButton } from "./Button";
 import { useTheme } from "./theme";
+import { useLocale, LOCALE_LABEL, type Locale } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
-const nav = [
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Examples", href: "#demo" },
-  { label: "Trust", href: "#trust" },
+const nav: { href: string; label: Record<Locale, string> }[] = [
+  { href: "#how-it-works", label: { en: "How it works", ar: "كيف يعمل" } },
+  { href: "#journey", label: { en: "Examples", ar: "أمثلة" } },
+  { href: "#trust", label: { en: "Trust", ar: "الثقة" } },
 ];
 
 /**
  * Ulomis isn't open yet, so "Log in" has nowhere honest to go. Rather than a
  * dead route, it says so and points at the only door that exists.
  */
-function useLoginNotice() {
+function useLoginNotice(locale: Locale) {
   return () => {
     track("ulomis_cta_clicked", { cta: "login" });
-    toast("Ulomis isn't open yet", {
-      description: "There's nothing to log into for now — early access opens first.",
+    toast(locale === "ar" ? "أولوميس لم يُفتح بعد" : "Ulomis isn't open yet", {
+      description:
+        locale === "ar"
+          ? "لا يوجد شيء لتسجّل الدخول إليه الآن — الوصول المبكر يُفتح أولاً."
+          : "There's nothing to log into for now — early access opens first.",
       action: {
-        label: "Join early",
+        label: locale === "ar" ? "انضم مبكراً" : "Join early",
         onClick: () =>
           document.getElementById("early-access")?.scrollIntoView({ behavior: "smooth" }),
       },
@@ -32,10 +36,35 @@ function useLoginNotice() {
   };
 }
 
+function LanguageToggle() {
+  const { locale, setLocale } = useLocale();
+  const next: Locale = locale === "en" ? "ar" : "en";
+
+  return (
+    <UButton
+      variant="ghost"
+      size="sm"
+      onClick={() => {
+        track("ulomis_locale_changed", { to: next });
+        setLocale(next);
+      }}
+      aria-label={`${LOCALE_LABEL.en} | ${LOCALE_LABEL.ar}`}
+      className="gap-1.5 text-muted-foreground"
+    >
+      <Globe className="size-4" />
+      <span className="hidden sm:inline">{LOCALE_LABEL[next]}</span>
+    </UButton>
+  );
+}
+
 export function Header() {
   const { theme, toggleTheme } = useTheme();
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const onLogin = useLoginNotice();
+  const onLogin = useLoginNotice(locale);
+
+  const loginLabel = locale === "ar" ? "تسجيل الدخول" : "Log in";
+  const joinLabel = locale === "ar" ? "انضم مبكراً" : "Join early access";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl">
@@ -47,19 +76,21 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="ml-auto hidden items-center gap-1 lg:flex">
+        <nav className="ms-auto hidden items-center gap-1 lg:flex">
           {nav.map((item) => (
             <a
               key={item.href}
               href={item.href}
               className="rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
-              {item.label}
+              {item.label[locale]}
             </a>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 lg:ml-3 lg:gap-2">
+        <div className="ms-auto flex items-center gap-1.5 lg:ms-3 lg:gap-2">
+          <LanguageToggle />
+
           <UButton
             variant="ghost"
             size="icon"
@@ -75,7 +106,7 @@ export function Header() {
             className="hidden text-muted-foreground sm:inline-flex"
             onClick={onLogin}
           >
-            Log in
+            {loginLabel}
           </UButton>
 
           <UButton
@@ -87,7 +118,7 @@ export function Header() {
               track("ulomis_cta_clicked", { cta: "join_early_access", placement: "header" })
             }
           >
-            <a href="#early-access">Join early access</a>
+            <a href="#early-access">{joinLabel}</a>
           </UButton>
 
           <UButton
@@ -118,7 +149,7 @@ export function Header() {
                   onClick={() => setOpen(false)}
                   className="block rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 >
-                  {item.label}
+                  {item.label[locale]}
                 </a>
               </li>
             ))}
@@ -128,7 +159,7 @@ export function Header() {
                 onClick={() => setOpen(false)}
                 className="block rounded-xl px-3 py-2.5 text-sm font-medium text-primary hover:bg-accent"
               >
-                Join early access
+                {joinLabel}
               </a>
             </li>
             <li>
@@ -138,9 +169,9 @@ export function Header() {
                   setOpen(false);
                   onLogin();
                 }}
-                className="block w-full rounded-xl px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                className="block w-full rounded-xl px-3 py-2.5 text-start text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               >
-                Log in
+                {loginLabel}
               </button>
             </li>
           </ul>
