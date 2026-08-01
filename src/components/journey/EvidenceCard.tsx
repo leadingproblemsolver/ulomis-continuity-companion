@@ -74,8 +74,8 @@ export function EvidenceCard({
         transitionDelay: gathered ? `${index * 60}ms` : "0ms",
       }}
     >
-      <span className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <span className="flex min-w-0 items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           <Icon className="size-3.5 shrink-0" />
           <span className="truncate">{t(fragment.origin)}</span>
         </span>
