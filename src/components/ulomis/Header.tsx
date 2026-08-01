@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Globe, Menu, Moon, Sun, X } from "lucide-react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { UlomisMark } from "./UlomisMark";
 import { UButton } from "./Button";
 import { useTheme } from "./theme";
-import { useLocale, LOCALE_LABEL, type Locale } from "@/lib/i18n";
+import { useLocale, LOCALE_LABEL, LOCALE_CODE, LOCALE_FLAG, type Locale } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
@@ -36,24 +36,51 @@ function useLoginNotice(locale: Locale) {
   };
 }
 
+const LOCALES: Locale[] = ["en", "ar"];
+
+/**
+ * A visible two-way switch rather than a single icon that cycles and forces
+ * a guess at what it currently means — both languages are always on screen,
+ * flag plus code, with the active one unmistakably filled in.
+ */
 function LanguageToggle() {
   const { locale, setLocale } = useLocale();
-  const next: Locale = locale === "en" ? "ar" : "en";
 
   return (
-    <UButton
-      variant="ghost"
-      size="sm"
-      onClick={() => {
-        track("ulomis_locale_changed", { to: next });
-        setLocale(next);
-      }}
-      aria-label={`${LOCALE_LABEL.en} | ${LOCALE_LABEL.ar}`}
-      className="gap-1.5 text-muted-foreground"
+    <div
+      role="group"
+      aria-label={`${LOCALE_LABEL.en} / ${LOCALE_LABEL.ar}`}
+      className="flex items-center gap-0.5 rounded-full border border-border bg-surface p-0.5"
     >
-      <Globe className="size-4" />
-      <span className="hidden sm:inline">{LOCALE_LABEL[next]}</span>
-    </UButton>
+      {LOCALES.map((code) => {
+        const active = locale === code;
+        return (
+          <button
+            key={code}
+            type="button"
+            onClick={() => {
+              if (active) return;
+              track("ulomis_locale_changed", { to: code });
+              setLocale(code);
+            }}
+            aria-pressed={active}
+            aria-label={LOCALE_LABEL[code]}
+            className={cn(
+              "focus-ring flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold transition-all duration-200",
+              active
+                ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+          >
+            <span aria-hidden className="text-sm leading-none">
+              {LOCALE_FLAG[code]}
+            </span>
+            {/* Flags alone stay unambiguous below ~400px; the code returns once there's room. */}
+            <span className="hidden min-[400px]:inline">{LOCALE_CODE[code]}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

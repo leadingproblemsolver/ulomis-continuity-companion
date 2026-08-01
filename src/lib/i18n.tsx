@@ -14,6 +14,23 @@ export const LOCALE_LABEL: Record<Locale, string> = {
   ar: "العربية",
 };
 
+/** Short in-language code shown next to the flag — never translated. */
+export const LOCALE_CODE: Record<Locale, string> = {
+  en: "EN",
+  ar: "عربي",
+};
+
+/**
+ * Flags identify a country, not a language — Arabic has no single flag any
+ * more than English does. Saudi Arabia's is used here as the conventional
+ * stand-in for "Arabic" in language switchers; the US flag for English is
+ * the same kind of convention, not a claim about audience.
+ */
+export const LOCALE_FLAG: Record<Locale, string> = {
+  en: "🇺🇸",
+  ar: "🇸🇦",
+};
+
 interface LocaleContextValue {
   locale: Locale;
   dir: "ltr" | "rtl";
