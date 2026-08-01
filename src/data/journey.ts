@@ -85,6 +85,8 @@ export interface Contradiction {
 export interface Journey {
   id: string;
   label: Bilingual;
+  /** Short name for the thread itself — the proof object's title. */
+  title: Bilingual;
   /** One-line framing shown when this scenario is selected. */
   premise: Bilingual;
   fragments: Fragment[];
@@ -109,6 +111,7 @@ export interface Journey {
 export const workJourney: Journey = {
   id: "work",
   label: { en: "My work", ar: "عملي" },
+  title: { en: "Client-launch decision", ar: "قرار إطلاق العميل" },
   premise: {
     en: "You paused a client-launch decision nine days ago.",
     ar: "توقّفت عن حسم قرار إطلاق العميل قبل تسعة أيام.",

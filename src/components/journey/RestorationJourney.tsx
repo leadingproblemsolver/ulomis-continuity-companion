@@ -70,6 +70,13 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
     [journey.id],
   );
 
+  const inspectClaim = useCallback(
+    (field: string) => {
+      track("journey_why_opened", { journey: journey.id, field });
+    },
+    [journey.id],
+  );
+
   const relevantIds = useMemo(
     () => journey.fragments.filter((f) => f.relevant).map((f) => f.id),
     [journey.fragments],
@@ -139,6 +146,8 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
 
         {restored ? (
           <div className="mt-6 space-y-6">
+            <p className="font-display text-lg font-semibold sm:text-xl">{t(journey.title)}</p>
+
             <ol className="space-y-6">
               <ClaimRow
                 icon={Compass}
@@ -146,6 +155,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                 lead={locale === "ar" ? "أين أنت الآن" : "Where you are"}
                 claim={journey.before}
                 fragments={journey.fragments}
+                onInspect={() => inspectClaim("current_objective")}
               />
               {journey.changes.map((change, i) => (
                 <ClaimRow
@@ -155,6 +165,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                   lead={locale === "ar" ? "ما الذي تغيّر" : "What changed"}
                   claim={change}
                   fragments={journey.fragments}
+                  onInspect={() => inspectClaim(`change_${i}`)}
                 />
               ))}
               <ClaimRow
@@ -163,6 +174,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                 lead={locale === "ar" ? "ما قرّرتَه" : "What you decided"}
                 claim={journey.decision}
                 fragments={journey.fragments}
+                onInspect={() => inspectClaim("decision")}
               />
               <ClaimRow
                 icon={CircleDashed}
@@ -170,6 +182,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                 lead={locale === "ar" ? "لا يزال مفتوحاً" : "Still open"}
                 claim={journey.openItem}
                 fragments={journey.fragments}
+                onInspect={() => inspectClaim("open_item")}
               />
               <ClaimRow
                 icon={ArrowRight}
@@ -182,6 +195,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                     ? t(appliedCorrection.nextActionOverride)
                     : undefined
                 }
+                onInspect={() => inspectClaim("next_action")}
               />
             </ol>
 

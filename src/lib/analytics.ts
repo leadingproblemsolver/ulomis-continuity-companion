@@ -13,9 +13,10 @@ export type UlomisEvent =
   | "ulomis_locale_changed"
   // Restoration-journey funnel (see docs/journey-gaps.md for the full ladder
   // this is meant to measure against).
+  | "journey_recognition_statement_selected"
   | "journey_scenario_started"
   | "journey_restored"
-  | "journey_uncertainty_inspected"
+  | "journey_why_opened"
   | "journey_correction_applied"
   | "journey_contradiction_resolved"
   | "journey_next_action_selected"

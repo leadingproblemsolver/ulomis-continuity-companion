@@ -3,6 +3,7 @@ import { UlomisMark } from "@/components/ulomis/UlomisMark";
 import { UButton } from "@/components/ulomis/Button";
 import { useLocale } from "@/lib/i18n";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { track } from "@/lib/analytics";
 import { phaseToMascot } from "./journeyMascot";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +69,7 @@ export function RecognitionScene({ onStart }: { onStart: () => void }) {
               onClick={() => {
                 pinnedRef.current = true;
                 setActive(i);
+                track("journey_recognition_statement_selected", { statement: i });
               }}
               aria-pressed={active === i}
               className={cn(

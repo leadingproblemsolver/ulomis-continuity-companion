@@ -72,6 +72,46 @@ violate the site's own "no fake metrics" principle (see
 `src/components/landing/EvidenceStatus.tsx`), which predates this change and
 still applies.
 
+## Audit pass against `ulomisjourneygapreconstruction.yaml`
+
+A fuller, formal version of the gap analysis (structured `gap_registry`
+G01–G17, `where_you_left_it_view` fields, `validation_events`) was provided
+after the build above shipped. Per "roll with it, don't complicate," this
+was an audit for cheap, real gaps — not a rebuild against the new document.
+Three things were checked and closed; everything else in the spec that
+isn't already covered above is a deliberate, documented divergence, not an
+oversight.
+
+Closed:
+
+- **Thread title.** The spec's `where_you_left_it_view` names the
+  restored thread explicitly. `Journey.title` (`{ en, ar }`) was missing;
+  added to the type and to `workJourney`
+  (`"Client-launch decision"` / `"قرار إطلاق العميل"`), and it now renders
+  above the claim list in `RestorationJourney.tsx`.
+- **Dead `why_opened` tracking.** `ClaimRow`'s `onInspect` prop was fully
+  built but never called from the parent, so opening a "Why" panel on any
+  of the five continuity-view rows fired nothing. Wired `onInspect` on
+  every `ClaimRow` in `RestorationJourney.tsx`; the stale
+  `journey_uncertainty_inspected` event (declared, never fired anywhere)
+  was renamed to `journey_why_opened` to match, since Why panels exist on
+  settled claims too, not only the uncertain one.
+- **Missing recognition-scene event.** Selecting one of the four felt
+  statements in `RecognitionScene.tsx` changed nothing tracked. Added
+  `journey_recognition_statement_selected`.
+
+Reaffirmed, not changed:
+
+- **No numeric confidence score.** The formal spec's evidence model still
+  implies a gradient of certainty; this build still represents that only
+  through the qualitative fact/stated/inferred badge, for the reason
+  above. Restated here because the fuller spec makes the omission more
+  visible, not because the reasoning changed.
+- **No Life/Household scenario switcher.** Still just "My work." Building
+  a switcher now would mean either two more full bilingual journeys or a
+  visible "coming soon" stub — both more than "don't complicate" calls
+  for at this stage.
+
 ## What's explicitly deferred, not forgotten
 
 - **Only "My work" is built.** "My life" and "My household" are typed into
