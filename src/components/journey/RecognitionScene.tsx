@@ -46,8 +46,8 @@ export function RecognitionScene({ onStart }: { onStart: () => void }) {
       <h1 className="mt-8 max-w-2xl text-3xl leading-[1.15] font-semibold text-balance sm:text-5xl">
         {locale === "ar" ? (
           <>
-            لقد بذلتَ التفكير بالفعل.
-            <span className="mt-1 block text-gradient-thread">لماذا تبدأ من جديد؟</span>
+            لقد أنجزت التفكير بالفعل.
+            <span className="mt-1 block text-gradient-thread">فلماذا تبدأ من جديد؟</span>
           </>
         ) : (
           <>
@@ -56,6 +56,12 @@ export function RecognitionScene({ onStart }: { onStart: () => void }) {
           </>
         )}
       </h1>
+
+      <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+        {locale === "ar"
+          ? "يعيد أولوميس وصل القرارات والتغيّرات والأسئلة المفتوحة في خيط غير مكتمل، لتتابع من دون إعادة قراءة كل شيء."
+          : "Ulomis reconnects the decisions, changes, and open questions behind an unfinished thread—so you can continue without rereading everything."}
+      </p>
 
       <ul
         role="list"
@@ -86,7 +92,7 @@ export function RecognitionScene({ onStart }: { onStart: () => void }) {
       </ul>
 
       <UButton size="lg" variant="thread" className="mt-9" onClick={onStart}>
-        {locale === "ar" ? "استعِد خيطاً" : "Restore a thread"}
+        {locale === "ar" ? "استعد خيطًا" : "Restore a thread"}
       </UButton>
       <p className="mt-4 text-xs text-muted-foreground">
         {locale === "ar"

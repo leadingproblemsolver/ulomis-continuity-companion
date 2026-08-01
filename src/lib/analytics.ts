@@ -1,25 +1,30 @@
 /**
  * Validation instrumentation.
  *
- * No third-party SDK is wired up. Events are pushed onto a queue on `window`
- * so a real analytics provider can drain them later, and echoed to the console
- * in development. Replacing `deliver` is the only change needed to send these
- * somewhere real.
+ * No third-party SDK is wired up. Events are pushed onto a queue on `window`,
+ * dispatched as a `CustomEvent` so anything on the page can listen without a
+ * shared import, and echoed to the console in development. Replacing
+ * `deliver` is the only change needed to send these somewhere real.
  */
 
 export type UlomisEvent =
-  | "ulomis_viewed"
+  | "landing_viewed"
   | "ulomis_cta_clicked"
-  | "ulomis_locale_changed"
+  | "language_changed"
   // Restoration-journey funnel (see docs/journey-gaps.md for the full ladder
   // this is meant to measure against).
   | "journey_recognition_statement_selected"
-  | "journey_scenario_started"
-  | "journey_restored"
-  | "journey_why_opened"
-  | "journey_correction_applied"
-  | "journey_contradiction_resolved"
-  | "journey_next_action_selected"
+  | "scenario_selected"
+  | "demo_started"
+  | "restoration_completed"
+  | "why_opened"
+  | "item_confirmed"
+  | "item_corrected"
+  | "item_dismissed"
+  | "contradiction_resolved"
+  | "next_action_selected"
+  | "demo_first_value_completed"
+  | "real_thread_started"
   | "ulomis_early_access_submitted"
   | "ulomis_referral_created";
 
@@ -42,6 +47,7 @@ function deliver(payload: TrackedEvent) {
 
   window.ulomisEvents = window.ulomisEvents ?? [];
   window.ulomisEvents.push(payload);
+  window.dispatchEvent(new CustomEvent("ulomis:event", { detail: payload }));
 
   if (import.meta.env.DEV) {
     console.debug(`[ulomis] ${payload.event}`, payload.props ?? {});

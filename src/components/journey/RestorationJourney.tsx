@@ -1,18 +1,28 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, CircleDashed, Compass } from "lucide-react";
 import { UButton } from "@/components/ulomis/Button";
 import { UCard } from "@/components/ulomis/Card";
 import { UlomisMark } from "@/components/ulomis/UlomisMark";
 import { ThreadRibbon } from "@/components/ulomis/ThreadRibbon";
-import type { CorrectionOption, Journey, NextActionOption } from "@/data/journey";
+import {
+  journeys,
+  defaultJourneyId,
+  getJourney,
+  type CorrectionOption,
+  type NextActionOption,
+} from "@/data/journey";
 import { useLocale, useText } from "@/lib/i18n";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { track } from "@/lib/analytics";
+import { track, trackOnce } from "@/lib/analytics";
 import { EvidenceField } from "./EvidenceCard";
 import { ClaimRow } from "./ClaimRow";
 import { TrustTest } from "./TrustTest";
 import { Continuation } from "./Continuation";
 import { RecognitionScene } from "./RecognitionScene";
+import { ScenarioSwitcher } from "./ScenarioSwitcher";
+import { RealThreadHandoff } from "./RealThreadHandoff";
+import { TrustStrip } from "./TrustStrip";
+import { ReturnPreview } from "./ReturnPreview";
 import { phaseToMascot, type JourneyPhase } from "./journeyMascot";
 import { cn } from "@/lib/utils";
 
@@ -20,19 +30,50 @@ type Stage = "recognition" | "scattered" | "connecting" | "restored";
 
 const CONNECT_MS = 1300;
 
-export function RestorationJourney({ journey }: { journey: Journey }) {
+function scenarioFromQuery(): string | null {
+  if (typeof window === "undefined") return null;
+  const q = new URLSearchParams(window.location.search).get("scenario");
+  return q && journeys.some((j) => j.id === q) ? q : null;
+}
+
+export function RestorationJourney() {
   const { locale } = useLocale();
   const t = useText();
   const reducedMotion = useReducedMotion();
+
+  const [scenarioId, setScenarioId] = useState(defaultJourneyId);
+  const journey = useMemo(() => getJourney(scenarioId), [scenarioId]);
 
   const [stage, setStage] = useState<Stage>("recognition");
   const [appliedCorrection, setAppliedCorrection] = useState<CorrectionOption | null>(null);
   const [resolvedSide, setResolvedSide] = useState<string | null>(null);
   const [chosenAction, setChosenAction] = useState<NextActionOption | null>(null);
 
+  // A ?scenario= deep link is honored after mount rather than during the
+  // initial render, so the server-rendered "work" default never mismatches
+  // what the client paints on hydration.
+  useEffect(() => {
+    const fromQuery = scenarioFromQuery();
+    if (fromQuery) setScenarioId(fromQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selectScenario = useCallback(
+    (id: string) => {
+      if (id === scenarioId) return;
+      track("scenario_selected", { scenario: id });
+      setScenarioId(id);
+      setStage("scattered");
+      setAppliedCorrection(null);
+      setResolvedSide(null);
+      setChosenAction(null);
+    },
+    [scenarioId],
+  );
+
   const beginScenario = useCallback(() => {
     setStage("scattered");
-    track("journey_scenario_started", { journey: journey.id });
+    track("demo_started", { journey: journey.id });
   }, [journey.id]);
 
   const restore = useCallback(() => {
@@ -40,7 +81,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
     window.setTimeout(
       () => {
         setStage("restored");
-        track("journey_restored", { journey: journey.id });
+        track("restoration_completed", { journey: journey.id });
       },
       reducedMotion ? 100 : CONNECT_MS,
     );
@@ -49,7 +90,13 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
   const applyCorrection = useCallback(
     (option: CorrectionOption) => {
       setAppliedCorrection(option);
-      track("journey_correction_applied", { journey: journey.id, correction: option.id });
+      const event =
+        option.id === "correct"
+          ? "item_confirmed"
+          : option.id === "unrelated"
+            ? "item_dismissed"
+            : "item_corrected";
+      track(event, { journey: journey.id, correction: option.id });
     },
     [journey.id],
   );
@@ -57,7 +104,7 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
   const resolveContradiction = useCallback(
     (sideId: string) => {
       setResolvedSide(sideId);
-      track("journey_contradiction_resolved", { journey: journey.id, side: sideId });
+      track("contradiction_resolved", { journey: journey.id, side: sideId });
     },
     [journey.id],
   );
@@ -65,14 +112,15 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
   const chooseAction = useCallback(
     (option: NextActionOption) => {
       setChosenAction(option);
-      track("journey_next_action_selected", { journey: journey.id, action: option.id });
+      track("next_action_selected", { journey: journey.id, action: option.id });
+      trackOnce("demo_first_value_completed", {});
     },
     [journey.id],
   );
 
   const inspectClaim = useCallback(
     (field: string) => {
-      track("journey_why_opened", { journey: journey.id, field });
+      track("why_opened", { journey: journey.id, field });
     },
     [journey.id],
   );
@@ -82,8 +130,6 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
     [journey.fragments],
   );
 
-  const withdrawnIds = appliedCorrection?.dropsClaim ? journey.uncertain.from : [];
-
   const phase: JourneyPhase =
     stage === "scattered"
       ? "gathering"
@@ -91,10 +137,12 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
         ? "connecting"
         : resolvedSide
           ? chosenAction
-            ? "complete"
-            : "contradiction"
+            ? "completed"
+            : "contradicted"
           : appliedCorrection
-            ? "correction"
+            ? appliedCorrection.id === "missing"
+              ? "no_match"
+              : "corrected"
             : "uncertain";
 
   if (stage === "recognition") {
@@ -106,7 +154,10 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-14 sm:py-20">
-      <p className="text-center text-sm text-muted-foreground">{t(journey.premise)}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">{t(journey.premise)}</p>
+        <ScenarioSwitcher journeys={journeys} activeId={journey.id} onSelect={selectScenario} />
+      </div>
 
       <UCard variant="raised" padding="lg" className="mt-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -132,6 +183,14 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
             </p>
           )}
         </div>
+
+        {!gathered && (
+          <p className="mt-3 text-sm text-foreground/80">
+            {locale === "ar"
+              ? "بقيت المعلومات. لكن الخيط انقطع."
+              : "The information survived. The thread did not."}
+          </p>
+        )}
 
         <EvidenceField className="mt-4" fragments={journey.fragments} gathered={gathered} />
 
@@ -241,30 +300,18 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
                   ? "جارٍ الاستعادة…"
                   : "Restoring…"
                 : locale === "ar"
-                  ? "دَع أولوميس يستعيد هذا الخيط"
+                  ? "دَع أولوميس يعيد وصل هذا الخيط"
                   : "Let Ulomis restore this thread"}
               {stage !== "connecting" && <ArrowRight className="rtl:rotate-180" />}
             </UButton>
             <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
               {locale === "ar"
                 ? "هذا مثال موجَّه بمعطيات مكتوبة، وليس اتصالاً حقيقياً بأي تطبيق."
-                : "This is a guided example using written data — not a live connection to any app."}
+                : "This is a guided, simulated example using written data — not a live connection to any app."}
             </p>
           </div>
         )}
       </UCard>
-
-      {restored && chosenAction && (
-        <div className="mt-8 text-center">
-          <UButton variant="thread" size="lg" asChild>
-            <a href="#early-access">
-              {locale === "ar"
-                ? "امنح أولوميس خيطاً حقيقياً واحداً"
-                : "Give Ulomis one real thread"}
-            </a>
-          </UButton>
-        </div>
-      )}
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
         {relevantIds.length < journey.fragments.length &&
@@ -272,6 +319,14 @@ export function RestorationJourney({ journey }: { journey: Journey }) {
             ? "بعض القطع أعلاه لم تكن ذات صلة — بقيت قابلة للفحص، ولم تُستخدم في الخيط."
             : "Some of the pieces above weren't relevant — they stayed inspectable, not used in the thread.")}
       </p>
+
+      {restored && chosenAction && (
+        <div className="mt-10 space-y-10">
+          <RealThreadHandoff />
+          <TrustStrip />
+          <ReturnPreview journey={journey} />
+        </div>
+      )}
     </div>
   );
 }

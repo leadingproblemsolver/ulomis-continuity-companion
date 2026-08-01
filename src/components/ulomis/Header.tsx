@@ -60,7 +60,7 @@ function LanguageToggle() {
             type="button"
             onClick={() => {
               if (active) return;
-              track("ulomis_locale_changed", { to: code });
+              track("language_changed", { to: code });
               setLocale(code);
             }}
             aria-pressed={active}

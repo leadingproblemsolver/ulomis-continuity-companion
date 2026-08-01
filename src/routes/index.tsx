@@ -10,7 +10,6 @@ import { Philosophy } from "@/components/landing/Philosophy";
 import { EvidenceStatus } from "@/components/landing/EvidenceStatus";
 import { EarlyAccess } from "@/components/landing/EarlyAccess";
 import { RestorationJourney } from "@/components/journey/RestorationJourney";
-import { workJourney } from "@/data/journey";
 import { trackOnce } from "@/lib/analytics";
 
 const TITLE = "Ulomis — Your digital life, continued.";
@@ -32,7 +31,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  useEffect(() => trackOnce("ulomis_viewed"), []);
+  useEffect(() => trackOnce("landing_viewed"), []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +46,7 @@ function Index() {
           felt before it's explained, not the other way around.
         */}
         <div id="journey">
-          <RestorationJourney journey={workJourney} />
+          <RestorationJourney />
         </div>
 
         <Benefits />

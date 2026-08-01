@@ -12,10 +12,13 @@ export type JourneyPhase =
   | "connecting"
   | "restored"
   | "uncertain"
-  | "contradiction"
-  | "correction"
+  | "contradicted"
+  | "corrected"
   | "continued"
-  | "complete";
+  | "completed"
+  /** Something is genuinely missing — the loop stays open rather than
+   *  inventing continuity that doesn't exist. */
+  | "no_match";
 
 export const phaseToMascot: Record<
   JourneyPhase,
@@ -26,8 +29,9 @@ export const phaseToMascot: Record<
   connecting: { state: "attentive", progress: 0.75, eyes: false },
   restored: { state: "holding", progress: 1, eyes: true },
   uncertain: { state: "open", progress: 1, eyes: true },
-  contradiction: { state: "correction", progress: 1, eyes: true },
-  correction: { state: "correction", progress: 1, eyes: true },
+  contradicted: { state: "correction", progress: 1, eyes: true },
+  corrected: { state: "correction", progress: 1, eyes: true },
+  no_match: { state: "open", progress: 0.85, eyes: false },
   continued: { state: "holding", progress: 1, eyes: true },
-  complete: { state: "confirmed", progress: 1, eyes: true },
+  completed: { state: "confirmed", progress: 1, eyes: true },
 };

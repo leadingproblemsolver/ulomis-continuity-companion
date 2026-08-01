@@ -60,9 +60,14 @@ speaker. Treat it as needing that review before it's treated as final.
 
 ### Validation funnel
 
-`src/lib/analytics.ts` tracks `journey_scenario_started` →
-`journey_restored` → `journey_correction_applied` →
-`journey_contradiction_resolved` → `journey_next_action_selected`. (G16)
+`src/lib/analytics.ts` tracks `demo_started` → `restoration_completed` →
+`why_opened` → `item_confirmed` / `item_corrected` / `item_dismissed` →
+`contradiction_resolved` → `next_action_selected` (+ a one-time
+`demo_first_value_completed`) → `real_thread_started`. Also `landing_viewed`,
+`scenario_selected`, `language_changed`. Every event is also dispatched as a
+`window` `CustomEvent("ulomis:event")` alongside the `window.ulomisEvents`
+queue, so anything on the page can observe the funnel without importing the
+module. (G16)
 
 ### What was deliberately left out
 
@@ -107,27 +112,74 @@ Reaffirmed, not changed:
   through the qualitative fact/stated/inferred badge, for the reason
   above. Restated here because the fuller spec makes the omission more
   visible, not because the reasoning changed.
-- **No Life/Household scenario switcher.** Still just "My work." Building
-  a switcher now would mean either two more full bilingual journeys or a
-  visible "coming soon" stub — both more than "don't complicate" calls
-  for at this stage.
 
-## What's explicitly deferred, not forgotten
+## Full-scope pass: scenario switcher, real-thread handoff, return preview
 
-- **Only "My work" is built.** "My life" and "My household" are typed into
-  the same `Journey` shape (`src/data/journey.ts`) but not yet written. Adding
-  one is: write a second `Journey` object, add it to the `journeys` array,
-  build a scenario switcher in `RestorationJourney.tsx` (currently there's
-  only one, so no switcher UI exists yet).
-- **Real-thread handoff (G08's Scene 8–9)** — pasting or uploading an actual
-  unfinished thread. The CTA exists and links to the existing early-access
-  form; the low-friction paste/upload flow itself doesn't exist yet.
-- **Return-state preview (G15)** — "when you return, Ulomis shows what
-  changed" epilogue. Not built.
-- **Full 12-section page architecture (G07's complete restructure)** — only
-  the hero/demo portion was rebuilt. Benefits, How it works, Trust,
-  Philosophy, and Evidence status below the journey are unchanged from
-  before this pass, and are **not yet localized into Arabic** — an Arabic
-  visitor gets full parity through the journey, then English below it.
-- **Auth-after-value framing (G09's Scene 9)** — no auth exists in this
-  build at all (see the main README's scope note); out of scope regardless.
+A later, stricter instruction (the "Artifact-to-Adoption Pipeline" brief)
+required the three things the previous pass had deliberately deferred, plus
+a functional-mascot and analytics-vocabulary alignment. This section
+replaces the "explicitly deferred" list above — those items are now built.
+
+- **Three scenarios, one mechanism (G-scenario).** `src/data/journey.ts` now
+  defines `workJourney`, `lifeJourney`, and `householdJourney` — same
+  `Journey` shape, same 5–7 fragments / delta / decision / open loop /
+  uncertain-item / correction / contradiction / next-action structure for
+  each. `ScenarioSwitcher.tsx` is a quiet three-way tab control (not three
+  competing products) rendered above the demo card. `RestorationJourney`
+  defaults to `work` unless a `?scenario=life|household` query param is
+  present — read after mount (not during the initial render) specifically
+  so it never causes an SSR/client hydration mismatch. Switching scenarios
+  resets only the demo state (stage, correction, contradiction, next
+  action); theme and language are untouched, since they live in separate
+  contexts.
+- **Real-thread handoff (Scene 8).** `RealThreadHandoff.tsx` — a paste
+  textarea, an optional local `.txt`/`.md`/`.json` file read via
+  `FileReader` (never uploaded), and an optional short label. Content lives
+  only in component state. Saving switches to a review view that shows back
+  exactly what was entered, states plainly that nothing was read, analyzed,
+  or sent anywhere, and offers two truthful next steps: copy what was typed,
+  or continue to the real early-access form (`#early-access`). It does not
+  fabricate a reconstruction of the pasted content — that would violate the
+  "simulated content must be explicitly labeled" invariant.
+- **Return preview (Scene 9).** `ReturnPreview.tsx` — a short, static
+  epilogue per scenario (`Journey.returnPreview`): previous state → one new
+  fragment → what changed → what's still open → the current next action.
+  Explicitly not a second demo — no interaction, no restore button.
+- **Compact trust strip (Scene 10).** `TrustStrip.tsx` — six one-line
+  claims (sources visible, inferences correctable, simulated examples
+  labeled, Ulomis suggests/you decide, nothing leaves the browser, no live
+  app access), placed near the demo rather than folded into the larger
+  `TrustSection`/`EvidenceStatus` sections further down the page, which are
+  unchanged and still carry the fuller version of the same claims.
+- **Functional mascot contract.** `journeyMascot.ts`'s `JourneyPhase` was
+  renamed to the spec's exact vocabulary (`contradicted`, `corrected`,
+  `completed`) and gained `no_match` — used specifically when the visitor
+  picks "Something is missing" on the uncertain claim, so the ribbon stays
+  open rather than resolving to a state that implies an answer exists.
+- **Analytics vocabulary.** `src/lib/analytics.ts`'s event names were
+  renamed to the required set (`landing_viewed`, `scenario_selected`,
+  `demo_started`, `restoration_completed`, `why_opened`, `item_confirmed`,
+  `item_corrected`, `item_dismissed`, `contradiction_resolved`,
+  `next_action_selected`, `demo_first_value_completed`,
+  `real_thread_started`, `language_changed`). The five correction options
+  map onto three tracked outcomes: `correct` → `item_confirmed`,
+  `unrelated` → `item_dismissed`, everything else (`partly`, `outdated`,
+  `missing`) → `item_corrected`.
+- **Recognition-scene copy** now matches the brief's exact EN/AR headline
+  and includes the required support-copy paragraph, which the earlier build
+  was missing entirely (it only had the headline, the four pill statements,
+  and the CTA).
+
+## What's still deferred, not forgotten
+
+- **Full 12-section page architecture** — only the journey and the scenes
+  immediately around it (recognition through return preview) were rebuilt
+  to the brief's exact structure. Benefits, How it works, the full Trust
+  section, Philosophy, and Evidence status below the journey are unchanged
+  from the earlier pass, and are **not localized into Arabic** — an Arabic
+  visitor gets full parity through the journey and its surrounding scenes,
+  then English below it.
+- **Auth-after-value framing** — no auth exists in this build at all (see
+  the main README's scope note); out of scope regardless.
+- **Native-speaker Arabic review** — still outstanding for all three
+  scenarios, including the two written in this pass.
