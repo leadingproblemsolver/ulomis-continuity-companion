@@ -3,50 +3,51 @@ import type { ComponentType } from "react";
 import { useText } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const claims: { icon: ComponentType<{ className?: string }>; text: { en: string; ar: string } }[] = [
-  {
-    icon: Eye,
-    text: {
-      en: "Sources stay visible.",
-      ar: "المصادر تبقى ظاهرة.",
+const claims: { icon: ComponentType<{ className?: string }>; text: { en: string; ar: string } }[] =
+  [
+    {
+      icon: Eye,
+      text: {
+        en: "Sources stay visible.",
+        ar: "المصادر تبقى ظاهرة.",
+      },
     },
-  },
-  {
-    icon: SlidersHorizontal,
-    text: {
-      en: "Inferences can be corrected.",
-      ar: "يمكن تصحيح الاستنتاجات.",
+    {
+      icon: SlidersHorizontal,
+      text: {
+        en: "Inferences can be corrected.",
+        ar: "يمكن تصحيح الاستنتاجات.",
+      },
     },
-  },
-  {
-    icon: Tag,
-    text: {
-      en: "Simulated examples are labeled.",
-      ar: "الأمثلة المحاكاة موسومة بوضوح.",
+    {
+      icon: Tag,
+      text: {
+        en: "Simulated examples are labeled.",
+        ar: "الأمثلة المحاكاة موسومة بوضوح.",
+      },
     },
-  },
-  {
-    icon: ShieldCheck,
-    text: {
-      en: "Ulomis suggests; you decide.",
-      ar: "أولوميس يقترح؛ أنت تقرّر.",
+    {
+      icon: ShieldCheck,
+      text: {
+        en: "Ulomis suggests; you decide.",
+        ar: "أولوميس يقترح؛ أنت تقرّر.",
+      },
     },
-  },
-  {
-    icon: EyeOff,
-    text: {
-      en: "Nothing from this demo leaves your browser.",
-      ar: "لا شيء من هذا العرض يغادر متصفحك.",
+    {
+      icon: EyeOff,
+      text: {
+        en: "Nothing from this demo leaves your browser.",
+        ar: "لا شيء من هذا العرض يغادر متصفحك.",
+      },
     },
-  },
-  {
-    icon: Globe,
-    text: {
-      en: "This demo doesn't access any live app.",
-      ar: "هذا العرض لا يصل إلى أي تطبيق فعلي.",
+    {
+      icon: Globe,
+      text: {
+        en: "This demo doesn't access any live app.",
+        ar: "هذا العرض لا يصل إلى أي تطبيق فعلي.",
+      },
     },
-  },
-];
+  ];
 
 /**
  * Scene 10 — compact, close to the demo, deliberately not another marketing

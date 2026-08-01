@@ -55,7 +55,6 @@ export function RestorationJourney() {
   useEffect(() => {
     const fromQuery = scenarioFromQuery();
     if (fromQuery) setScenarioId(fromQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const selectScenario = useCallback(

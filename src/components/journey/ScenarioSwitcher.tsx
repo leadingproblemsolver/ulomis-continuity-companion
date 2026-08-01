@@ -13,7 +13,12 @@ interface ScenarioSwitcherProps {
  * Scene 2 — quiet alternatives, not three competing products: one small
  * segmented control, same mechanism underneath for all three (G-scenario).
  */
-export function ScenarioSwitcher({ journeys, activeId, onSelect, className }: ScenarioSwitcherProps) {
+export function ScenarioSwitcher({
+  journeys,
+  activeId,
+  onSelect,
+  className,
+}: ScenarioSwitcherProps) {
   const t = useText();
   return (
     <div

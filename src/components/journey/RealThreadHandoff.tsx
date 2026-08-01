@@ -45,25 +45,16 @@ export function RealThreadHandoff() {
   }
 
   async function copyPacket() {
-    const packet = [
-      label ? `Label: ${label}` : null,
-      "---",
-      content,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const packet = [label ? `Label: ${label}` : null, "---", content].filter(Boolean).join("\n");
     try {
       await navigator.clipboard.writeText(packet);
       setCopied(true);
-      toast.success(
-        locale === "ar" ? "تم النسخ" : "Copied",
-        {
-          description:
-            locale === "ar"
-              ? "هذا نسخة مما كتبتَه فقط — لم يُحلَّل شيء."
-              : "This is exactly what you typed — nothing was analyzed.",
-        },
-      );
+      toast.success(locale === "ar" ? "تم النسخ" : "Copied", {
+        description:
+          locale === "ar"
+            ? "هذا نسخة مما كتبتَه فقط — لم يُحلَّل شيء."
+            : "This is exactly what you typed — nothing was analyzed.",
+      });
       window.setTimeout(() => setCopied(false), 2500);
     } catch {
       toast.error(locale === "ar" ? "تعذّر النسخ" : "Couldn't copy");
@@ -179,7 +170,9 @@ export function RealThreadHandoff() {
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip />
-            {locale === "ar" ? "أرفق ملف نصي (.txt، .md، .json)" : "Attach a .txt, .md, or .json file"}
+            {locale === "ar"
+              ? "أرفق ملف نصي (.txt، .md، .json)"
+              : "Attach a .txt, .md, or .json file"}
           </UButton>
         </div>
 
@@ -191,7 +184,9 @@ export function RealThreadHandoff() {
             id="real-thread-label"
             value={label}
             onChange={(event) => setLabel(event.target.value)}
-            placeholder={locale === "ar" ? "مثال: قرار إطلاق العميل" : "e.g. Client-launch decision"}
+            placeholder={
+              locale === "ar" ? "مثال: قرار إطلاق العميل" : "e.g. Client-launch decision"
+            }
           />
         </Field>
 

@@ -15,7 +15,10 @@ export function ReturnPreview({ journey }: { journey: Journey }) {
   const preview = journey.returnPreview;
 
   const steps = [
-    { label: locale === "ar" ? "الحالة السابقة" : "Previous state", text: t(preview.previousState) },
+    {
+      label: locale === "ar" ? "الحالة السابقة" : "Previous state",
+      text: t(preview.previousState),
+    },
     {
       label: t(preview.newFragment.origin),
       text: t(preview.newFragment.text),
