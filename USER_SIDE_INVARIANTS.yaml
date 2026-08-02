@@ -1,0 +1,78 @@
+version: 1.0.0
+scope: public_mvp_and_assisted_validation
+irreducible_invariant: >-
+  Ulomis converts fragmented evidence from a live workflow into a verified,
+  current, source-backed operational state that enables a human to resume and
+  advance the work with less reconstruction and coordination.
+
+enforced_in_demo:
+  thread_as_core_unit: true
+  current_operational_state_not_summary: true
+  visible_latest_meaningful_change: true
+  decision_rationale_preserved: true
+  commitments_visible: true
+  dependencies_visible: true
+  unresolved_items_visible: true
+  missing_information_visible: true
+  owners_visible: true
+  material_claims_have_provenance: true
+  stale_context_labeled: true
+  contradictions_preserved: true
+  uncertainty_visible: true
+  five_correction_choices_have_distinct_outcomes: true
+  correction_updates_state_and_next_action: true
+  next_action_is_suggestion_not_execution: true
+  english_arabic_parity: true
+  rtl_ltr_switching: true
+  reduced_motion_equivalence: true
+  simulated_capability_disclosed: true
+  no_signup_before_value: true
+  save_is_real_state_transition: true
+  defer_preserves_when_and_why: true
+  completion_preserves_history: true
+  browser_return_restores_state: true
+  export_available: true
+  local_deletion_available: true
+  storage_failure_degrades_honestly: true
+  real_thread_draft_is_local_and_deletable: true
+  redaction_guidance_visible: true
+  analytics_excludes_thread_content: true
+
+validation_ready:
+  real_thread_intake: true
+  optional_baseline:
+    - expected_reentry_time
+    - sources_normally_opened
+    - people_normally_contacted
+    - next_action_confidence
+  assisted_trial_packet_export: true
+  validation_protocol_documented: true
+
+not_yet_proven:
+  - reliable_arbitrary_real_thread_reconstruction
+  - measured_reentry_time_reduction
+  - measured_coordination_reduction
+  - successful_real_interruption_reentry
+  - second_live_thread_adoption
+  - repeated_use
+  - payment_or_internal_sponsorship
+  - compounding_memory_from_real_corrections
+  - live_task_specific_retrieval
+  - durable_multidevice_persistence
+  - autonomous_ingestion_or_action
+
+not_runtime_product_scope:
+  - recipient_role_classification
+  - identity_and_profile_verification
+  - outreach_message_generation
+  - scraper_generation_and_normalization
+  - pilot_pricing_decisions
+  - commercial_proof_claims
+
+verification:
+  invariant_script: scripts/verify-user-invariants.mjs
+  command: npm run verify:invariants
+  build_gate:
+    - npm install
+    - npm run lint
+    - npm run build

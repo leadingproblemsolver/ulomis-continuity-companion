@@ -1,0 +1,19 @@
+User-agent: Googlebot
+Disallow: /pilot/
+Allow: /
+
+User-agent: Bingbot
+Disallow: /pilot/
+Allow: /
+
+User-agent: Twitterbot
+Disallow: /pilot/
+Allow: /
+
+User-agent: facebookexternalhit
+Disallow: /pilot/
+Allow: /
+
+User-agent: *
+Disallow: /pilot/
+Allow: /
