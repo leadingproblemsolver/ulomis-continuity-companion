@@ -3,8 +3,9 @@
 Static, single-page marketing site ("Ulomis for households"). Separate from the
 interactive product demo served by the main app in `src/`.
 
-- `index.html` — self-contained (inline CSS/JS, no build step). Open directly
-  or serve as-is from any static host (Netlify, GitHub Pages, S3, etc.).
+- `index.html` — fully self-contained (inline CSS/JS, Sora/Manrope embedded as
+  base64 `@font-face` data URIs, no external requests, no build step). Open
+  directly or serve as-is from any static host (Netlify, GitHub Pages, S3, etc.).
 - Copy, palette, and typography match the brand system defined in the root
   `README.md` (Primary blue `#315FDD`, Sora/Manrope, light + dark mode).
 
