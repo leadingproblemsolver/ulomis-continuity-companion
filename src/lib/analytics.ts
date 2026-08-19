@@ -25,6 +25,8 @@ export type UlomisEvent =
   | "next_action_selected"
   | "demo_first_value_completed"
   | "real_thread_started"
+  | "real_thread_first_value_completed"
+  | "real_thread_packet_copied"
   | "ulomis_early_access_submitted"
   | "ulomis_referral_created";
 
