@@ -36,6 +36,11 @@ function scenarioFromQuery(): string | null {
   return q && journeys.some((j) => j.id === q) ? q : null;
 }
 
+function directFirstValueFromQuery(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("start") === "real-thread";
+}
+
 export function RestorationJourney() {
   const { locale } = useLocale();
   const t = useText();
@@ -45,16 +50,20 @@ export function RestorationJourney() {
   const journey = useMemo(() => getJourney(scenarioId), [scenarioId]);
 
   const [stage, setStage] = useState<Stage>("recognition");
+  const [directFirstValue, setDirectFirstValue] = useState(false);
   const [appliedCorrection, setAppliedCorrection] = useState<CorrectionOption | null>(null);
   const [resolvedSide, setResolvedSide] = useState<string | null>(null);
   const [chosenAction, setChosenAction] = useState<NextActionOption | null>(null);
 
-  // A ?scenario= deep link is honored after mount rather than during the
-  // initial render, so the server-rendered "work" default never mismatches
-  // what the client paints on hydration.
+  // Query params are honored after mount rather than during initial render so
+  // SSR and hydration always begin from the same stable default.
   useEffect(() => {
     const fromQuery = scenarioFromQuery();
     if (fromQuery) setScenarioId(fromQuery);
+    if (directFirstValueFromQuery()) {
+      setDirectFirstValue(true);
+      trackOnce("ulomis_cta_clicked", { cta: "direct_real_thread_entry" });
+    }
   }, []);
 
   const selectScenario = useCallback(
@@ -128,6 +137,39 @@ export function RestorationJourney() {
     () => journey.fragments.filter((f) => f.relevant).map((f) => f.id),
     [journey.fragments],
   );
+
+  if (directFirstValue) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-14 sm:py-20">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {locale === "ar" ? "اختبار القيمة الأولى" : "First-value test"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {locale === "ar"
+                ? "خيط حقيقي واحد. نتيجة واحدة قبل أي تسجيل."
+                : "One real thread. One result before any signup."}
+            </p>
+          </div>
+          <UButton
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setDirectFirstValue(false);
+              track("ulomis_cta_clicked", { cta: "direct_entry_to_guided_demo" });
+            }}
+          >
+            {locale === "ar" ? "شاهد المثال الموجّه" : "See guided example"}
+          </UButton>
+        </div>
+        <RealThreadHandoff />
+        <div className="mt-8">
+          <TrustStrip />
+        </div>
+      </div>
+    );
+  }
 
   const phase: JourneyPhase =
     stage === "scattered"
