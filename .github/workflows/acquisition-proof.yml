@@ -1,0 +1,55 @@
+name: Ulomis acquisition proof
+
+on:
+  push:
+    branches:
+      - agent/ulomis-acquisition-proof
+  workflow_dispatch:
+
+jobs:
+  browser-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install app dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Install browser proof dependency
+        run: npm install --no-save --package-lock=false playwright@1.55.0
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Ulomis
+        run: |
+          nohup bun run dev -- --host 127.0.0.1 --port 4173 > /tmp/ulomis-dev.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/ulomis-dev.log
+          exit 1
+
+      - name: Verify first value on desktop and mobile
+        run: node scripts/browser-proof.mjs
+
+      - name: Upload browser proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ulomis-browser-proof
+          path: proof/browser/
+          if-no-files-found: warn

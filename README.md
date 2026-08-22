@@ -30,6 +30,17 @@ Ulomis is not:
 
 - robot servant.
 
+## Current proof path
+
+The acquisition-proof branch exposes a no-signup real-thread test at `/?start=real-thread`:
+
+1. paste 3–20 redacted lines from an unfinished real thread;
+2. press **Restore my thread locally**;
+3. receive a source-linked continuity packet: where you left it, explicit decisions, open loops, and an explicit next action when one exists;
+4. unsupported fields stay missing rather than being invented.
+
+The first pass is deliberately browser-local and deterministic: no upload and no AI-model call. See [`docs/ULOMIS_PROOF_LEDGER.md`](./docs/ULOMIS_PROOF_LEDGER.md) for the evidence states, browser/mobile verification contract, accumulated project lineage, acquisition hypothesis, and external attempt ledger.
+
 Create a reusable design system:
 
 - Primary blue: #315FDD
