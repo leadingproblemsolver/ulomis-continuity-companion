@@ -20,7 +20,11 @@ const browser = await chromium.launch({ headless: true });
 const results = [];
 
 function sectionFor(page, title) {
-  return page.getByRole("heading", { name: title, exact: true }).locator("..");
+  return page.getByRole("heading", { name: title, exact: true }).first().locator("..");
+}
+
+async function waitForExactText(locator, text) {
+  await locator.getByText(text, { exact: true }).first().waitFor({ state: "visible" });
 }
 
 try {
@@ -40,16 +44,19 @@ try {
     await page.locator("#real-thread-label").fill("Next student session");
     await page.getByRole("button", { name: "Restore my thread locally" }).click();
 
-    await page.getByText("Your first continuity packet", { exact: true }).waitFor();
-    await sectionFor(page, "Decisions")
-      .getByText("We decided to focus the next session on algebra word problems.", { exact: true })
-      .waitFor();
-    await sectionFor(page, "Open loops")
-      .getByText("We are still waiting for the parent to confirm Thursday's time.", { exact: true })
-      .waitFor();
-    await sectionFor(page, "Next action")
-      .getByText("Next I need to send two practice questions before the session.", { exact: true })
-      .waitFor();
+    await page.getByText("Your first continuity packet", { exact: true }).first().waitFor({ state: "visible" });
+    await waitForExactText(
+      sectionFor(page, "Decisions"),
+      "We decided to focus the next session on algebra word problems.",
+    );
+    await waitForExactText(
+      sectionFor(page, "Open loops"),
+      "We are still waiting for the parent to confirm Thursday's time.",
+    );
+    await waitForExactText(
+      sectionFor(page, "Next action"),
+      "Next I need to send two practice questions before the session.",
+    );
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     const events = await page.evaluate(() => window.ulomisEvents ?? []);
