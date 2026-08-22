@@ -19,6 +19,10 @@ await mkdir("proof/browser", { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const results = [];
 
+function sectionFor(page, title) {
+  return page.getByRole("heading", { name: title, exact: true }).locator("..");
+}
+
 try {
   for (const device of devices) {
     const page = await browser.newPage({ viewport: { width: device.width, height: device.height } });
@@ -37,9 +41,15 @@ try {
     await page.getByRole("button", { name: "Restore my thread locally" }).click();
 
     await page.getByText("Your first continuity packet", { exact: true }).waitFor();
-    await page.getByText("We decided to focus the next session on algebra word problems.", { exact: true }).waitFor();
-    await page.getByText("We are still waiting for the parent to confirm Thursday's time.", { exact: true }).waitFor();
-    await page.getByText("Next I need to send two practice questions before the session.", { exact: true }).waitFor();
+    await sectionFor(page, "Decisions")
+      .getByText("We decided to focus the next session on algebra word problems.", { exact: true })
+      .waitFor();
+    await sectionFor(page, "Open loops")
+      .getByText("We are still waiting for the parent to confirm Thursday's time.", { exact: true })
+      .waitFor();
+    await sectionFor(page, "Next action")
+      .getByText("Next I need to send two practice questions before the session.", { exact: true })
+      .waitFor();
 
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     const events = await page.evaluate(() => window.ulomisEvents ?? []);
