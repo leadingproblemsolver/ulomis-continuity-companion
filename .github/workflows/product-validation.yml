@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -16,13 +16,38 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "22"
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Lint
-        run: npm run lint
-      - name: Build
-        run: npm run build
-      - name: Verify continuity invariants
-        run: npm run verify:invariants
-      - name: Verify pilot readiness
-        run: npm run verify:pilot
+      - run: npm install --no-audit --no-fund
+      - run: npm run lint
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+
+  invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run verify:invariants
+
+  pilot-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npm run verify:pilot
