@@ -1,0 +1,25 @@
+{
+  "repo": "leadingproblemsolver/ulomis-continuity-companion",
+  "artifact_id": "ulomis-learning-continuity-pilot",
+  "artifact_url": "https://github.com/leadingproblemsolver/ulomis-continuity-companion",
+  "system": "Ulomis Continuity Companion",
+  "wedge": "continuity restoration for recurring learner/client threads without reconstructing context from memory",
+  "target_roles": [
+    "Independent Tutor",
+    "Coach",
+    "Learning Specialist",
+    "Small Learning Provider Owner"
+  ],
+  "pain_signals": [
+    "recurring sessions lose prior decisions, interventions, commitments, or context",
+    "operators reconstruct learner/client state from memory before the next session",
+    "corrections, provenance, uncertainty, and next actions are not preserved across sessions"
+  ],
+  "proof_refs": [
+    "README.md — deterministic continuity journey and user-side invariant closure",
+    "README.md — ReferAll live-thread pilot with baseline, evidence, correction, return timer, and second-thread decision",
+    "USER_SIDE_INVARIANT_AUDIT.md",
+    "VALIDATION_PROTOCOL.md"
+  ],
+  "desired_consequence": "one qualified tutor, coach, learning specialist, or small provider runs a real recurring thread through the pilot, returns for a later session, and records a positive, neutral, or negative continuity outcome"
+}
