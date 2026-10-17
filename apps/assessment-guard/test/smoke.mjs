@@ -48,6 +48,9 @@ async function check(name, fn) {
   } catch (e) {
     failed = true;
     results.push(`FAIL  ${name}: ${e.message}`);
+    // Surface failures as GitHub annotations so they are visible without raw logs.
+    if (process.env.GITHUB_ACTIONS)
+      console.log(`::error title=smoke::${name}: ${e.message}`.replace(/\n/g, " "));
   }
 }
 function assert(cond, msg) {
