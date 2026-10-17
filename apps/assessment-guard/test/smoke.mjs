@@ -305,11 +305,18 @@ await check(
 async function noHorizontalScroll(width, size) {
   await page.setViewportSize({ width, height: 800 });
   await page.selectOption("#textSize", size);
-  const { sw, cw } = await page.evaluate(() => ({
-    sw: document.documentElement.scrollWidth,
-    cw: document.documentElement.clientWidth,
-  }));
-  assert(sw <= cw, `overflow at ${width}px/${size}%: ${sw} > ${cw}`);
+  const { sw, cw, culprits } = await page.evaluate(() => {
+    const cw = document.documentElement.clientWidth;
+    const culprits = [...document.querySelectorAll("body *")]
+      .filter((e) => e.getBoundingClientRect().right > cw + 1)
+      .slice(0, 5)
+      .map(
+        (e) =>
+          `${e.tagName.toLowerCase()}${e.id ? "#" + e.id : ""} "${e.textContent.trim().slice(0, 30)}"`,
+      );
+    return { sw: document.documentElement.scrollWidth, cw, culprits };
+  });
+  assert(sw <= cw, `overflow at ${width}px/${size}%: ${sw} > ${cw} [${culprits.join("; ")}]`);
 }
 await check(
   "8b. reflow at 320px (100%) and 320px at 200% text — no horizontal scroll",

@@ -132,6 +132,10 @@ label {
   font-weight: 650;
   margin-bottom: 0.3rem;
 }
+label.choice > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 label.choice {
   font-weight: 400;
   display: flex;
@@ -364,7 +368,10 @@ code {
     font-size: 1.6rem;
   }
   .panel {
-    padding: 1rem 0.85rem;
+    padding: 1rem 0.6rem;
+  }
+  fieldset.field {
+    padding: 0.5rem 0.5rem;
   }
   .actions .btn,
   .list-controls .btn {
