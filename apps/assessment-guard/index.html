@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Assessment Guard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to main content</a>
+    <header class="top">
+      <div class="wrap">
+        <p class="eyebrow">
+          Independent student tool · not affiliated with or endorsed by any university
+        </p>
+        <h1>Assessment Guard</h1>
+        <p class="notice" id="notice">
+          <strong>Your instructor and D2L are the source of truth.</strong> This tool does not
+          connect to D2L, does not sync automatically, and does not send reminders. It only helps
+          you record dates you have checked yourself and export them to your own calendar.
+        </p>
+        <div class="toolbar">
+          <label for="textSize">Text size</label>
+          <select id="textSize">
+            <option value="100">Standard</option>
+            <option value="150">Large (150%)</option>
+            <option value="200">Extra large (200%)</option>
+          </select>
+          <button type="button" id="demoToggle" class="btn ghost" aria-pressed="false">
+            Show synthetic demo
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="demoBanner" class="demo-banner" hidden role="note">
+      <div class="wrap">
+        <strong>DEMO MODE — SYNTHETIC DATA.</strong> Nothing here is a real assessment, and nothing
+        you do in demo mode is saved. Your own saved list is untouched.
+      </div>
+    </div>
+
+    <main id="main" class="wrap">
+      <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+      <section aria-labelledby="formHeading" class="panel">
+        <h2 id="formHeading">1. Add an assessment you have checked</h2>
+        <p class="hint">
+          Copy the date from the official announcement — never from memory. The course master
+          syllabus gives
+          <strong>weights, not dates</strong>.
+        </p>
+        <div id="errorSummary" class="error-summary" tabindex="-1" hidden>
+          <h3>Fix these before saving:</h3>
+          <ul id="errorList"></ul>
+        </div>
+        <form id="form" novalidate>
+          <div class="grid">
+            <div class="field">
+              <label for="course">Course code</label>
+              <input id="course" name="course" value="INFS1101" autocomplete="off" maxlength="20" />
+            </div>
+            <div class="field">
+              <label for="type">Assessment type</label>
+              <select id="type" name="type"></select>
+            </div>
+            <div class="field">
+              <label for="title"
+                >Name <span class="opt">(required for “Other”, otherwise optional)</span></label
+              >
+              <input id="title" name="title" maxlength="80" placeholder="e.g. Quiz 3" />
+            </div>
+            <div class="field">
+              <label for="when">Date and time (your local time)</label>
+              <input id="when" name="when" type="datetime-local" aria-describedby="whenPreview" />
+              <p id="whenPreview" class="preview">No date entered yet.</p>
+            </div>
+          </div>
+
+          <fieldset class="field">
+            <legend>Have you checked this date against an official source?</legend>
+            <label class="choice">
+              <input type="radio" name="status" value="verified" checked />
+              <span>Yes — I checked it myself</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="status" value="unverified" />
+              <span>Not yet — save it as <strong>unverified</strong></span>
+            </label>
+          </fieldset>
+
+          <div class="grid">
+            <div class="field">
+              <label for="sourceType">Where did you check it?</label>
+              <select id="sourceType" name="sourceType"></select>
+            </div>
+            <div class="field">
+              <label for="sourceRef">What exactly did you check?</label>
+              <input
+                id="sourceRef"
+                name="sourceRef"
+                maxlength="200"
+                placeholder="Announcement title, email subject or link"
+              />
+            </div>
+            <div class="field">
+              <label for="location">Room or details <span class="opt">(optional)</span></label>
+              <input id="location" name="location" maxlength="120" />
+            </div>
+          </div>
+          <p class="hint">
+            “Verified” here means <em>you</em> say you checked it. The tool cannot check D2L for
+            you.
+          </p>
+          <div class="actions">
+            <button type="submit" id="saveBtn" class="btn primary">Save assessment</button>
+            <button type="button" id="cancelEdit" class="btn ghost" hidden>Cancel edit</button>
+          </div>
+        </form>
+      </section>
+
+      <section aria-labelledby="listHeading" class="panel">
+        <h2 id="listHeading">2. Your assessments</h2>
+        <div class="list-controls">
+          <label for="filter">Show</label>
+          <select id="filter">
+            <option value="all">All, in date order</option>
+            <option value="attention">Needs attention</option>
+            <option value="upcoming">Upcoming only</option>
+            <option value="past">Past only</option>
+          </select>
+          <button type="button" id="exportAll" class="btn">Export all upcoming (.ics)</button>
+        </div>
+        <p id="summary" class="summary"></p>
+        <ol id="list" class="list"></ol>
+
+        <div id="exportHelp" class="export-help" hidden tabindex="-1">
+          <h3>Exported is not the same as imported</h3>
+          <p>A calendar file was downloaded. Nothing has been added to your calendar yet. Next:</p>
+          <ol>
+            <li>
+              Open the downloaded <code>.ics</code> file (or use your calendar's “Import” option).
+            </li>
+            <li>
+              Find the event in your calendar and check the date and time match the official
+              announcement.
+            </li>
+            <li>
+              Check the reminders. The file <em>requests</em> alerts 7 days, 48 hours and 24 hours
+              before, but some calendar apps ignore or drop imported reminders — add them yourself
+              if they are missing.
+            </li>
+            <li>
+              Come back and press <strong>“I checked it is in my calendar”</strong> on the
+              assessment.
+            </li>
+          </ol>
+          <p>
+            If a date changes later, edit it here <strong>and</strong> update or delete the old
+            event in your calendar yourself. This tool cannot change your calendar.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="gradeHeading" class="panel">
+        <h2 id="gradeHeading">3. Grade scenarios (INFS1101 weights)</h2>
+        <p class="hint">
+          Weights from the INFS1101 Fall 2026 course master syllabus: final 35%, midterm 20%, labs
+          10%, quizzes 15%, tests 20%. Passing grade 60%. Leave a box <strong>empty</strong> if you
+          do not know the score yet — empty is never treated as zero. Your section's rules may
+          differ; this is an estimate, not your official grade.
+        </p>
+        <form id="gradeForm" novalidate>
+          <div class="grid grades" id="gradeInputs"></div>
+          <div class="grid">
+            <div class="field">
+              <label for="target">Target overall (%)</label>
+              <input id="target" inputmode="decimal" value="60" />
+            </div>
+            <div class="field">
+              <label for="assumed"
+                >Projection: assume this average on unknown parts (%)
+                <span class="opt">(optional)</span></label
+              >
+              <input id="assumed" inputmode="decimal" />
+            </div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Calculate</button>
+            <button type="button" id="midtermZero" class="btn ghost">
+              Try scenario: midterm counted as 0
+            </button>
+            <button type="button" id="gradeClear" class="btn ghost">Clear scores</button>
+          </div>
+        </form>
+        <div id="gradeResult" class="result" role="status" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="dataHeading" class="panel">
+        <h2 id="dataHeading">4. Your data</h2>
+        <p>
+          Everything is stored only in this browser on this device. Nothing is sent to a server.
+          Clearing browser data, using private browsing, or switching devices will lose it —
+          download a backup.
+        </p>
+        <div class="actions">
+          <button type="button" id="backup" class="btn">Download backup (.json)</button>
+          <input
+            type="file"
+            id="restore"
+            accept="application/json,.json"
+            class="visually-hidden-file"
+          />
+          <label class="btn file-btn" for="restore">Restore from backup…</label>
+          <button type="button" id="clearAll" class="btn danger">
+            Delete all saved assessments
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="howHeading" class="panel">
+        <h2 id="howHeading">How it decides</h2>
+        <ol class="algo">
+          <li>
+            <strong>Input</strong> a date you copied from an official source, and say where you
+            checked it.
+          </li>
+          <li>
+            <strong>Validate</strong>: reject missing or impossible dates; “verified” needs a
+            source.
+          </li>
+          <li><strong>Store</strong> it in this browser only.</li>
+          <li>
+            <strong>Decide</strong> for each assessment: passed, within 24 hours, within 48 hours,
+            within 7 days, or later — plus whether it is unverified or not yet confirmed in your
+            calendar.
+          </li>
+          <li><strong>Repeat</strong> the check every time you open the page.</li>
+          <li><strong>Act</strong>: export to your calendar, then confirm it arrived.</li>
+        </ol>
+        <p class="hint">
+          No AI, no hidden decisions. This is a student learning project; it does not grant
+          extensions, excuse missed assessments, or replace university systems.
+        </p>
+      </section>
+    </main>
+    <footer class="wrap foot">
+      Assessment Guard v1 · independent student project · data stays on this device
+    </footer>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

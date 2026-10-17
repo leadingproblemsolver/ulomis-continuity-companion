@@ -1,0 +1,38 @@
+// Builds a single self-contained HTML file (dist/assessment-guard.html) for static hosting or
+// sharing. No dependencies. `--check` builds in memory and verifies the result without writing.
+import fs from "node:fs";
+import path from "node:path";
+import vm from "node:vm";
+import { fileURLToPath } from "node:url";
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const read = (p) => fs.readFileSync(path.join(root, p), "utf8");
+
+const core = read("src/core.js");
+const names = [...core.matchAll(/^export (?:const|function) (\w+)/gm)].map((m) => m[1]);
+const coreBody = core.replace(/^export /gm, "");
+const app = read("src/app.js").replace(/^import \* as C from "\.\/core\.js";\s*$/m, "");
+if (/^import /m.test(app)) throw new Error("app.js has an unexpected import; update build.mjs");
+
+const bundle = `"use strict";\nconst C = (() => {\n${coreBody}\nreturn { ${names.join(", ")} };\n})();\n${app}`;
+let html = read("index.html");
+const cssTag = '<link rel="stylesheet" href="styles.css" />';
+const jsTag = '<script type="module" src="src/app.js"></script>';
+if (!html.includes(cssTag) || !html.includes(jsTag))
+  throw new Error("index.html tags changed; update build.mjs");
+html = html.replace(cssTag, () => `<style>\n${read("styles.css")}</style>`);
+html = html.replace(
+  jsTag,
+  () => `<script>\n${bundle.replace(/<\/script/gi, "<\\/script")}</script>`,
+);
+
+// Sanity: bundle must parse (compile only, never executed here).
+new vm.Script(bundle, { filename: "assessment-guard-bundle.js" });
+
+if (process.argv.includes("--check")) {
+  console.log(`build check ok: ${names.length} core exports, ${html.length} bytes`);
+} else {
+  fs.mkdirSync(path.join(root, "dist"), { recursive: true });
+  fs.writeFileSync(path.join(root, "dist/assessment-guard.html"), html);
+  console.log(`wrote dist/assessment-guard.html (${html.length} bytes)`);
+}
