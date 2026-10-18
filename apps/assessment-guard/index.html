@@ -44,6 +44,46 @@
     <main id="main" class="wrap">
       <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
 
+      <details class="panel howto" id="howto" open>
+        <summary><h2 id="howtoHeading">How to use it (2 minutes)</h2></summary>
+        <ol class="steps">
+          <li>
+            <strong>Open the official announcement</strong> for the assessment — D2L or your
+            instructor's email. Keep it open next to this page.
+          </li>
+          <li>
+            In <strong>step 1</strong> below, choose the assessment type and type the
+            <strong>date and time</strong> exactly as the announcement says. Check the grey line
+            under the date: it shows the day and timezone that will be saved.
+          </li>
+          <li>
+            Choose <strong>“Yes — I checked it myself”</strong>, pick where you checked it, and type
+            the announcement title or email subject. Not sure yet? Choose
+            <strong>“Not yet”</strong> — it will be flagged as unverified.
+          </li>
+          <li>Press <strong>Save assessment</strong>. It appears in step 2, in date order.</li>
+          <li>
+            On that assessment, press <strong>Add to Google Calendar</strong> or
+            <strong>Add to Outlook</strong> (a new tab opens with the event filled in — press
+            <strong>Save</strong> there), or <strong>Download .ics file</strong> for Apple Calendar
+            and others.
+          </li>
+          <li>
+            In your calendar, check the time and add reminders (we suggest 7 days, 48 hours and 24
+            hours before). Then come back and press
+            <strong>“I checked it is in my calendar”</strong>.
+          </li>
+          <li>
+            Open this page again whenever you like: anything within 48 hours, unverified, or not yet
+            in your calendar is flagged at the top of step 2.
+          </li>
+        </ol>
+        <p class="hint">
+          Just looking? Press <strong>Show synthetic demo</strong> at the top to see example
+          assessments. Demo data is fake and never saved.
+        </p>
+      </details>
+
       <section aria-labelledby="formHeading" class="panel">
         <h2 id="formHeading">1. Add an assessment you have checked</h2>
         <p class="hint">
@@ -130,26 +170,28 @@
             <option value="upcoming">Upcoming only</option>
             <option value="past">Past only</option>
           </select>
-          <button type="button" id="exportAll" class="btn">Export all upcoming (.ics)</button>
+          <button type="button" id="exportAll" class="btn">Download .ics for all upcoming</button>
         </div>
         <p id="summary" class="summary"></p>
         <ol id="list" class="list"></ol>
 
         <div id="exportHelp" class="export-help" hidden tabindex="-1">
-          <h3>Exported is not the same as imported</h3>
-          <p>A calendar file was downloaded. Nothing has been added to your calendar yet. Next:</p>
+          <h3>Sent to your calendar is not the same as saved in it</h3>
+          <p>Nothing is in your calendar until you finish there. Next:</p>
           <ol>
             <li>
-              Open the downloaded <code>.ics</code> file (or use your calendar's “Import” option).
+              <strong>Google / Outlook:</strong> in the tab that opened, check the details and press
+              <strong>Save</strong>. <strong>.ics file:</strong> open the downloaded file (or use
+              your calendar's “Import” option).
             </li>
             <li>
               Find the event in your calendar and check the date and time match the official
               announcement.
             </li>
             <li>
-              Check the reminders. The file <em>requests</em> alerts 7 days, 48 hours and 24 hours
-              before, but some calendar apps ignore or drop imported reminders — add them yourself
-              if they are missing.
+              Check the reminders. The <code>.ics</code> file <em>requests</em> alerts 7 days, 48
+              hours and 24 hours before, but some calendar apps drop them, and Google/Outlook links
+              use your default reminder — add the alerts yourself if they are missing.
             </li>
             <li>
               Come back and press <strong>“I checked it is in my calendar”</strong> on the
@@ -160,6 +202,21 @@
             If a date changes later, edit it here <strong>and</strong> update or delete the old
             event in your calendar yourself. This tool cannot change your calendar.
           </p>
+        </div>
+
+        <div id="icsFallback" class="export-help" hidden tabindex="-1">
+          <h3>Calendar file text</h3>
+          <p>
+            This shared page cannot download files. Easiest: use
+            <strong>Add to Google Calendar</strong> or <strong>Add to Outlook</strong> on the
+            assessment. Or copy this text into a plain-text file, save it as
+            <code>assessment.ics</code>, and open that file.
+          </p>
+          <label for="icsText">Calendar (.ics) text</label>
+          <textarea id="icsText" rows="8" readonly spellcheck="false"></textarea>
+          <div class="actions">
+            <button type="button" id="copyIcs" class="btn">Copy calendar text</button>
+          </div>
         </div>
       </section>
 
@@ -245,6 +302,23 @@
         </p>
       </section>
     </main>
+
+    <div id="confirmBox" class="confirm-backdrop" hidden>
+      <div
+        class="confirm"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirmTitle"
+        aria-describedby="confirmText"
+      >
+        <h2 id="confirmTitle">Are you sure?</h2>
+        <p id="confirmText"></p>
+        <div class="actions">
+          <button type="button" id="confirmNo" class="btn">Cancel</button>
+          <button type="button" id="confirmYes" class="btn danger">Delete</button>
+        </div>
+      </div>
+    </div>
     <footer class="wrap foot">
       Assessment Guard v1 · independent student project · data stays on this device
     </footer>

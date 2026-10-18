@@ -433,6 +433,52 @@ export function parseIcs(text) {
   return events;
 }
 
+// ---------- "Add to calendar" links (open the student's own calendar in a new tab) ----------
+
+function eventText(a) {
+  return {
+    title: `${a.status === "verified" ? "" : "[UNVERIFIED] "}${a.course} ${displayName(a)}`,
+    details:
+      (a.status === "verified"
+        ? `Marked verified by you via ${a.sourceType}: ${a.sourceRef}`
+        : "UNVERIFIED — not yet checked against an official source.") +
+      "\nReconfirm the date/time in D2L or with your instructor. Unofficial reminder from Assessment Guard." +
+      "\nSuggested alerts: 7 days, 48 hours and 24 hours before.",
+  };
+}
+
+/** Google Calendar "create event" template link. Times in UTC (Z) so Google converts correctly. */
+export function googleCalendarUrl(a, durationMinutes = 60) {
+  const start = new Date(a.startUtc);
+  const end = new Date(start.getTime() + durationMinutes * 60000);
+  const { title, details } = eventText(a);
+  const p = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${icsUtcStamp(start)}/${icsUtcStamp(end)}`,
+    details,
+  });
+  if (a.location) p.set("location", a.location);
+  return `https://calendar.google.com/calendar/render?${p.toString()}`;
+}
+
+/** Outlook on the web (Microsoft 365 work/school accounts) compose link. */
+export function outlookCalendarUrl(a, durationMinutes = 60) {
+  const start = new Date(a.startUtc);
+  const end = new Date(start.getTime() + durationMinutes * 60000);
+  const { title, details } = eventText(a);
+  const p = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: title,
+    startdt: start.toISOString().replace(/\.\d{3}Z$/, "Z"),
+    enddt: end.toISOString().replace(/\.\d{3}Z$/, "Z"),
+    body: details,
+  });
+  if (a.location) p.set("location", a.location);
+  return `https://outlook.office.com/calendar/0/deeplink/compose?${p.toString()}`;
+}
+
 // ---------- Grades (INFS1101 weights) ----------
 
 /** Validate a score string. "" => null (not entered). Returns { ok, value, error }. */

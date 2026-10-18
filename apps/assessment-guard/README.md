@@ -15,7 +15,7 @@ A student can miss an assessment because the date lived only in memory, in an un
 - Shows the exact moment and timezone before saving (e.g. `Asia/Qatar (UTC+03:00)`), and rejects impossible dates and times skipped by daylight-saving changes.
 - Risk states with text and symbols (never colour alone): passed, within 24 h, within 48 h, within 7 days, later — plus "unverified", "not yet confirmed in your calendar", and "changed after export".
 - Exports standards-compliant `.ics` (RFC 5545: escaped text, 75-octet line folding, stable `UID`, `SEQUENCE` bumped on edits, UTC times). Each event **requests** alerts 7 days, 48 h and 24 h before; calendar apps may ignore them.
-- After export, an **"Exported is not the same as imported"** checklist, and a button to record that you confirmed the event is in your calendar.
+- **Add to Google Calendar** and **Add to Outlook** (Microsoft 365) buttons that open the student's own calendar with the event pre-filled, plus a **"sent to your calendar is not the same as saved in it"** checklist and a button to record that the event really is in the calendar.
 - Grade scenarios using the INFS1101 master-syllabus weights (final 35, midterm 20, labs 10, quizzes 15, tests 20; pass 60). Empty means _not known_ — never zero. A "midterm counted as 0" scenario exists only as an explicit button and is labelled as a scenario.
 - JSON backup and restore with schema checks; restore merges and never overwrites.
 - Synthetic demo mode (course `DEMO101`, every item labelled `SYNTHETIC`), never saved.
@@ -24,13 +24,17 @@ A student can miss an assessment because the date lived only in memory, in an un
 
 No D2L access or scraping, no sign-in, no backend, no server storage, no push/email/SMS reminders, no calendar sync, no grade access, no AI, no institutional branding.
 
+**Full step-by-step guide: [USER_MANUAL.md](USER_MANUAL.md).**
+
+**Online copy:** https://claude.ai/artifact/LA1XQtuUnJGsVQPP4L7oNs · **Offline copy:** run `npm run build` and open `dist/assessment-guard.html`.
+
 ## 2-minute instructions
 
 1. Open the page. Read the yellow-edged notice.
 2. Open the official announcement (D2L or instructor email). Copy the date and time into **Date and time**. Check the line under it shows the right day and timezone.
 3. Choose **Yes — I checked it myself**, pick where you checked, and type the announcement title or email subject. (Not sure yet? Choose **Not yet** — it will be flagged as unverified.)
 4. Press **Save assessment**.
-5. Press **Export to calendar (.ics)**, open the downloaded file, and import it into your calendar.
+5. On the saved assessment press **Add to Google Calendar** or **Add to Outlook** and press Save in the tab that opens — or **Download .ics file**, open it, and import it into your calendar.
 6. In your calendar, check the time and the reminders. Then press **I checked it is in my calendar**.
 7. If a date changes: **Edit** it here, export again, and update or delete the old calendar event yourself.
 8. Use **Download backup** now and then — the data lives only in this browser.
@@ -57,11 +61,15 @@ cd apps/assessment-guard
 python3 -m http.server 8080          # or any static server, then open http://localhost:8080
 npm test                             # unit tests in Asia/Qatar, America/New_York and UTC
 npm run check                        # syntax + bundle check
-npm run build                        # dist/assessment-guard.html — single self-contained file
+npm run build                        # dist/assessment-guard.html (single offline file) + dist/hosted.html (claude.ai artifact body)
 NODE_PATH=/path/to/node_modules npm run smoke   # real-browser test (needs playwright + chromium; axe-core optional)
 ```
 
-Opening `index.html` directly from disk will not work (ES modules); use a static server or the built single file.
+Opening `index.html` directly from disk will not work (ES modules); use a static server, or double-click the built `dist/assessment-guard.html`, which works offline.
+
+### Hosting
+
+The built single file is a plain static page — any static host works (no env vars, no backend). The shared online copy is published as a claude.ai artifact from `dist/hosted.html`. Inside that host: browser `confirm()` and plain file downloads are blocked, so the app uses an in-page confirmation box, saves backups through the platform's download prompt, and shows `.ics` text to copy instead of downloading it (Google/Outlook buttons work normally). The smoke test covers this variant with a stand-in for the platform runtime.
 
 ## Tests
 
@@ -72,8 +80,8 @@ Opening `index.html` directly from disk will not work (ES modules); use a static
 | Timezone conversion (Asia/Qatar), DST gap rejection (America/New_York)                                                         | `npm test` under 3 TZs                  | pass                |
 | ICS escaping, folding, UID/SEQUENCE, alarms, round-trip parse                                                                  | `npm test`                              | pass                |
 | Grade math (0 + 75% ⇒ 60%; all 100 ⇒ 100%; impossible; target >100)                                                            | `npm test`                              | pass                |
-| Real browser user journey, reload, export download, edit-after-export, delete, restore, demo, keyboard, 320 px @200%, axe-core | `npm run smoke` (headless Chromium 141) | 21/21 pass          |
-| Import of exported `.ics` into Google Calendar / Apple Calendar / Outlook                                                      | manual                                  | **UNTESTED**        |
+| Real browser user journey, reload, export download, edit-after-export, delete, restore, demo, keyboard, 320 px @200%, axe-core | `npm run smoke` (headless Chromium 141) | 23/23 pass          |
+| Import of `.ics` / Google / Outlook links into a real calendar account                                                         | manual                                  | **UNTESTED**        |
 | Human screen-reader pass (NVDA, VoiceOver, TalkBack)                                                                           | manual                                  | **UNTESTED**        |
 | Real low-vision user session                                                                                                   | manual                                  | **UNTESTED**        |
 

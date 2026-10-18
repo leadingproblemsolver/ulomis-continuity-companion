@@ -26,6 +26,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
   background: var(--bg);
@@ -36,7 +39,8 @@ body {
 .wrap {
   max-width: 62rem;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }
 .skip {
   position: absolute;
@@ -382,4 +386,55 @@ code {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+.howto summary {
+  cursor: pointer;
+  list-style-position: outside;
+}
+.howto summary h2 {
+  display: inline;
+}
+.steps li {
+  margin: 0.45rem 0;
+}
+a.btn {
+  text-decoration: none;
+}
+textarea {
+  width: 100%;
+  font:
+    0.85rem/1.4 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  padding: 0.6rem;
+  border: 2px solid var(--line);
+  border-radius: 0.4rem;
+  color: var(--text);
+  background: #fff;
+}
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 35, 64, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 20;
+}
+.confirm {
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  max-width: 32rem;
+  width: 100%;
+  border: 3px solid var(--danger);
+  max-height: 90vh;
+  overflow: auto;
+}
+.confirm p {
+  overflow-wrap: anywhere;
 }

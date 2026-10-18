@@ -16,7 +16,7 @@ This is a learning project showing the CLOs applied to a real problem. It is **n
 | Inputs             | course, type, name, local date/time, verified?, source type, source reference, location                                        |
 | Outputs            | sorted list with risk states, `.ics` file, attention flags, grade-scenario text                                                |
 | Constraints        | no D2L access, no server, no invented dates, honest about what is _not_ done (export ≠ import)                                 |
-| Test               | 24 unit tests + 21 real-browser checks (see README)                                                                            |
+| Test               | 26 unit tests + 23 real-browser checks (see README)                                                                            |
 
 ### CLO2 — Use control structures (sequence, selection, repetition)
 
@@ -29,9 +29,9 @@ This is a learning project showing the CLOs applied to a real problem. It is **n
   return "later";
   ```
   Boundaries tested with a fixed clock (`time state boundaries` test).
-- **Selection** — `gradeAnalysis()` line 450 chooses `possible` / `impossible` / `already-secured` / `met` / `not-met`.
-- **Repetition** — `for…of` over weights in `gradeAnalysis()`, over records in `parseStore()` line 254, over events and alarms in `buildIcs()` line 364, over characters in `foldLine()` line 327; `render()` in [`src/app.js`](../src/app.js) line 281 loops over the filtered list.
-- **Sequence** — `onSubmit()` (app.js line 194): read → validate → duplicate check → save → render → announce.
+- **Selection** — `gradeAnalysis()` line 496 chooses `possible` / `impossible` / `already-secured` / `met` / `not-met`.
+- **Repetition** — `for…of` over weights in `gradeAnalysis()`, over records in `parseStore()` line 254, over events and alarms in `buildIcs()` line 364, over characters in `foldLine()` line 327; `render()` in [`src/app.js`](../src/app.js) line 333 loops over the filtered list.
+- **Sequence** — `onSubmit()` (app.js line 246): read → validate → duplicate check → save → render → announce.
 
 ### CLO3 — Design algorithms with flowcharts / pseudocode
 
@@ -89,7 +89,7 @@ Decomposition into small, single-purpose functions (topic: methods), each unit-t
 | `filterAssessments`            | 203       | list sort + filter                   |
 | `parseStore`                   | 254       | repetition, defensive input handling |
 | `foldLine` / `buildIcs`        | 327 / 364 | string operations, repetition        |
-| `gradeAnalysis`                | 450       | arithmetic, selection, repetition    |
+| `gradeAnalysis`                | 496       | arithmetic, selection, repetition    |
 
 Tests: [`test/core.test.js`](../test/core.test.js) (unit) and [`test/smoke.mjs`](../test/smoke.mjs) (browser).
 

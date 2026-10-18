@@ -316,3 +316,25 @@ test("synthetic demo records are all labelled SYNTHETIC and use a non-real cours
     assert.ok(C.sanitizeRecord(a));
   }
 });
+
+// ---- Add-to-calendar links ----
+test("Google Calendar link carries UTC dates, title, location and reminder hint", () => {
+  const a = { ...rec({ location: "Room A, Block 2" }), id: "g1" };
+  const u = new URL(C.googleCalendarUrl(a));
+  assert.equal(u.origin + u.pathname, "https://calendar.google.com/calendar/render");
+  assert.equal(u.searchParams.get("action"), "TEMPLATE");
+  assert.equal(u.searchParams.get("text"), "INFS1101 Quiz");
+  const start = C.icsUtcStamp(new Date(a.startUtc));
+  const end = C.icsUtcStamp(new Date(new Date(a.startUtc).getTime() + 3600000));
+  assert.equal(u.searchParams.get("dates"), `${start}/${end}`);
+  assert.equal(u.searchParams.get("location"), "Room A, Block 2");
+  assert.match(u.searchParams.get("details"), /7 days, 48 hours and 24 hours/);
+});
+
+test("Outlook link uses the same instant and flags unverified events", () => {
+  const a = { ...rec({ status: "unverified", sourceType: "", sourceRef: "" }), id: "o1" };
+  const u = new URL(C.outlookCalendarUrl(a));
+  assert.equal(u.hostname, "outlook.office.com");
+  assert.equal(new Date(u.searchParams.get("startdt")).getTime(), new Date(a.startUtc).getTime());
+  assert.ok(u.searchParams.get("subject").startsWith("[UNVERIFIED] "));
+});

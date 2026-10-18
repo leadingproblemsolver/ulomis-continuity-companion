@@ -101,6 +101,58 @@ function el(tag, props = {}, ...children) {
   return node;
 }
 
+// ---------- in-page confirmation (browser confirm() is blocked in some hosts) ----------
+let confirmResolve = null;
+function askConfirm(message, confirmLabel) {
+  const box = $("confirmBox");
+  const opener = document.activeElement;
+  $("confirmText").textContent = message;
+  $("confirmYes").textContent = confirmLabel;
+  box.hidden = false;
+  $("confirmNo").focus();
+  return new Promise((resolve) => {
+    confirmResolve = (answer) => {
+      box.hidden = true;
+      confirmResolve = null;
+      if (opener && document.contains(opener)) opener.focus();
+      resolve(answer);
+    };
+  });
+}
+
+// ---------- saving files ----------
+// Inside a claude.ai artifact, files go through the platform's "downloads" capability
+// (it shows the viewer a confirmation). Everywhere else, a normal browser download.
+const hosted = typeof window.claude?.use === "function";
+let downloadsPromise = null;
+function hostDownloads() {
+  if (!hosted) return Promise.resolve(null);
+  if (!downloadsPromise) downloadsPromise = window.claude.use("downloads").catch(() => null);
+  return downloadsPromise;
+}
+
+/** Returns "saved", "declined" or "unavailable". */
+async function saveFile(filename, text, type) {
+  if (!hosted) {
+    const blob = new Blob([text], { type });
+    const url = URL.createObjectURL(blob);
+    const a = el("a", { href: url, download: filename });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return "saved";
+  }
+  const dl = await hostDownloads();
+  if (!dl) return "unavailable";
+  try {
+    await dl.save({ filename, data: text });
+    return "saved";
+  } catch (e) {
+    return e && e.code === "declined" ? "declined" : "unavailable";
+  }
+}
+
 // ---------- form ----------
 const FIELDS = ["course", "type", "title", "when", "sourceType", "sourceRef", "location"];
 
@@ -347,11 +399,29 @@ function render() {
     const actions = el("div", { class: "actions" });
     if (t !== "overdue")
       actions.append(
+        el("a", {
+          class: "btn small",
+          href: C.googleCalendarUrl(a),
+          target: "_blank",
+          rel: "noopener noreferrer",
+          text: "Add to Google Calendar",
+          "aria-label": `Add to Google Calendar (opens new tab): ${label}`,
+          onclick: () => markLinkExport(a, "Google Calendar"),
+        }),
+        el("a", {
+          class: "btn small",
+          href: C.outlookCalendarUrl(a),
+          target: "_blank",
+          rel: "noopener noreferrer",
+          text: "Add to Outlook",
+          "aria-label": `Add to Outlook calendar (opens new tab): ${label}`,
+          onclick: () => markLinkExport(a, "Outlook"),
+        }),
         el("button", {
           type: "button",
           class: "btn small",
-          text: "Export to calendar (.ics)",
-          "aria-label": `Export to calendar (.ics): ${label}`,
+          text: "Download .ics file",
+          "aria-label": `Download .ics file: ${label}`,
           onclick: () => exportAssessments([a]),
         }),
         el("button", {
@@ -417,14 +487,16 @@ function confirmCalendar(a) {
   );
 }
 
-function remove(a) {
+async function remove(a) {
   const label = `${a.course} ${C.displayName(a)} on ${fmtDateTime(a.startUtc)}`;
-  if (
-    !window.confirm(
-      `Delete ${label} from this tool?\n\nAny event already in your calendar will NOT be deleted.`,
-    )
-  )
+  const ok = await askConfirm(
+    `Delete ${label} from this tool? Any event already in your calendar will NOT be deleted.`,
+    "Delete it",
+  );
+  if (!ok) {
+    say("Nothing was deleted.");
     return;
+  }
   setList(current().filter((x) => x.id !== a.id));
   if (state.editingId === a.id) resetForm();
   say(
@@ -435,17 +507,26 @@ function remove(a) {
 }
 
 // ---------- export / backup ----------
-function download(filename, text, type) {
-  const blob = new Blob([text], { type });
-  const url = URL.createObjectURL(blob);
-  const a = el("a", { href: url, download: filename });
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+function markExported(ids, now = new Date()) {
+  setList(current().map((a) => (ids.has(a.id) ? { ...a, exportedAt: now.toISOString() } : a)));
 }
 
-function exportAssessments(arr) {
+function showExportHelp() {
+  const help = $("exportHelp");
+  help.hidden = false;
+  help.focus();
+}
+
+function markLinkExport(a, where) {
+  // The link opens the calendar in a new tab; the student still has to press Save there.
+  markExported(new Set([a.id]));
+  say(
+    `${where} opened in a new tab with this event filled in. It is NOT saved until you press Save there — then come back and press “I checked it is in my calendar”.`,
+  );
+  showExportHelp();
+}
+
+async function exportAssessments(arr) {
   const now = new Date();
   const future = arr.filter((a) => C.timeState(a.startUtc, now) !== "overdue");
   if (!future.length) {
@@ -457,29 +538,57 @@ function exportAssessments(arr) {
     future.length === 1
       ? `assessment-${future[0].course}-${future[0].type.replace(/\W+/g, "-")}.ics`.toLowerCase()
       : "assessments-upcoming.ics";
-  download(name, ics, "text/calendar;charset=utf-8");
-  const ids = new Set(future.map((a) => a.id));
-  setList(current().map((a) => (ids.has(a.id) ? { ...a, exportedAt: now.toISOString() } : a)));
+  if (hosted) {
+    // The hosted page cannot hand out .ics files; show the text so nothing is lost.
+    $("icsText").value = ics;
+    $("icsFallback").hidden = false;
+    say(
+      "This shared page cannot download .ics files. Use “Add to Google Calendar” or “Add to Outlook” instead, or copy the calendar text shown below.",
+    );
+    $("icsFallback").focus();
+    return;
+  }
+  await saveFile(name, ics, "text/calendar;charset=utf-8");
+  markExported(new Set(future.map((a) => a.id)), now);
   say(
-    `Downloaded ${name} with ${future.length} event(s). It is NOT in your calendar until you import it — see the steps below.`,
+    `Downloaded ${name} with ${future.length} event(s). It is NOT in your calendar until you open it and import it — see the steps below.`,
   );
-  const help = $("exportHelp");
-  help.hidden = false;
-  help.focus();
+  showExportHelp();
 }
 
-function backup() {
+async function copyIcs() {
+  const box = $("icsText");
+  try {
+    await navigator.clipboard.writeText(box.value);
+    say(
+      "Calendar text copied. Paste it into a plain-text file named assessment.ics, then open that file.",
+    );
+  } catch {
+    box.focus();
+    box.select();
+    say("Copy was blocked here. The text is selected — press Ctrl+C (or Cmd+C) to copy it.");
+  }
+}
+
+async function backup() {
   if (state.demo) {
     say("Backups are disabled in demo mode. Leave demo mode to back up your own data.");
     return;
   }
   const stamp = new Date().toISOString().slice(0, 10);
-  download(
+  const result = await saveFile(
     `assessment-guard-backup-${stamp}.json`,
     C.serializeStore(state.real),
     "application/json",
   );
-  say("Backup downloaded. Keep it somewhere safe — it is the only copy outside this browser.");
+  say(
+    {
+      saved: "Backup saved. Keep it somewhere safe — it is the only copy outside this browser.",
+      declined: "Backup not saved: you declined the download.",
+      unavailable:
+        "Backup is not available on this page. Open the offline version to back up your data.",
+    }[result],
+  );
 }
 
 function restore(file) {
@@ -509,7 +618,7 @@ function restore(file) {
   reader.readAsText(file);
 }
 
-function clearAll() {
+async function clearAll() {
   if (state.demo) {
     say("Leave demo mode to manage your own data.");
     return;
@@ -518,12 +627,14 @@ function clearAll() {
     say("There is nothing saved to delete.");
     return;
   }
-  if (
-    !window.confirm(
-      `Delete all ${state.real.length} saved assessment(s) from this browser?\n\nEvents already in your calendar will NOT be deleted. Consider downloading a backup first.`,
-    )
-  )
+  const ok = await askConfirm(
+    `Delete all ${state.real.length} saved assessment(s) from this browser? Events already in your calendar will NOT be deleted. Consider downloading a backup first.`,
+    "Delete everything",
+  );
+  if (!ok) {
+    say("Nothing was deleted.");
     return;
+  }
   setList([]);
   resetForm();
   say("All saved assessments were deleted from this browser. Calendar events were not touched.");
@@ -696,6 +807,13 @@ function init() {
     e.target.value = "";
   });
   $("clearAll").addEventListener("click", clearAll);
+  $("confirmYes").addEventListener("click", () => confirmResolve?.(true));
+  $("confirmNo").addEventListener("click", () => confirmResolve?.(false));
+  $("confirmBox").addEventListener("keydown", (e) => {
+    if (e.key === "Escape") confirmResolve?.(false);
+  });
+  $("copyIcs").addEventListener("click", copyIcs);
+  if (hosted) $("exportAll").textContent = "Show calendar text for all upcoming";
   $("demoToggle").addEventListener("click", toggleDemo);
   $("textSize").addEventListener("change", (e) => applyTextSize(e.target.value));
   $("gradeForm").addEventListener("submit", calculate);

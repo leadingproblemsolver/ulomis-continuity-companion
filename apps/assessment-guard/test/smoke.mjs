@@ -27,6 +27,15 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const types = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x");
+  if (url.pathname === "/__hosted") {
+    // Mimic the artifact host: it wraps the body-only page in its own skeleton.
+    const body = fs.readFileSync(path.join(root, "dist/hosted.html"), "utf8");
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end(
+      `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>${body}</body></html>`,
+    );
+    return;
+  }
   const rel = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
   const file = path.normalize(path.join(root, rel));
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
@@ -43,7 +52,10 @@ const results = [];
 let failed = false;
 async function check(name, fn) {
   try {
-    await fn();
+    await Promise.race([
+      fn(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("timed out after 20s")), 20000)),
+    ]);
     results.push(`PASS  ${name}`);
   } catch (e) {
     failed = true;
@@ -75,7 +87,15 @@ const page = await context.newPage();
 const consoleErrors = [];
 page.on("pageerror", (e) => consoleErrors.push(String(e)));
 page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()));
-page.on("dialog", (d) => d.accept());
+// The app must never use native alert/confirm/prompt (blocked inside hosted frames).
+page.on("dialog", (d) => {
+  consoleErrors.push(`native dialog used: ${d.message()}`);
+  d.dismiss();
+});
+// Calendar links open external sites; answer them locally so the test stays offline.
+await context.route(/https:\/\/(calendar\.google\.com|outlook\.office\.com)\//, (r) =>
+  r.fulfill({ status: 200, contentType: "text/html", body: "<title>calendar stub</title>" }),
+);
 
 async function addAssessment(fields) {
   const f = {
@@ -195,10 +215,12 @@ await check("5. export downloads valid .ics, shows 'Exported ≠ imported' check
   assert(/DTSTART:\d{8}T\d{6}Z/.test(icsText), "UTC time");
   assert(await page.isVisible("#exportHelp"), "help hidden");
   assert(
-    /Exported is not the same as imported/.test(await page.textContent("#exportHelp")),
+    /Sent to your calendar is not the same as saved in it/.test(
+      await page.textContent("#exportHelp"),
+    ),
     "help text",
   );
-  assert(/NOT in your calendar until you import it/.test(await feedback()), "feedback");
+  assert(/NOT in your calendar until you open it and import it/.test(await feedback()), "feedback");
 });
 
 await check("5b. exported DTSTART equals the entered local time (Asia/Qatar)", async () => {
@@ -230,8 +252,36 @@ await check("6b. calendar confirmation and delete messaging", async () => {
   await quiz.getByRole("button", { name: /in my calendar/ }).click();
   assert(/confirmed/.test(await feedback()), "confirm message");
   await quiz.getByRole("button", { name: /^Delete/ }).click();
+  assert(await page.isVisible("#confirmBox"), "in-page confirm not shown");
+  assert((await page.evaluate(() => document.activeElement.id)) === "confirmNo", "focus");
+  await page.keyboard.press("Escape");
+  assert(!(await page.isVisible("#confirmBox")), "Escape did not close");
+  assert((await items().count()) === 3, "deleted on cancel");
+  await quiz.getByRole("button", { name: /^Delete/ }).click();
+  await page.click("#confirmYes");
   assert(/delete that event there yourself/.test(await feedback()), "delete message");
   assert((await items().count()) === 2, "not deleted");
+});
+
+await check("5c. Google/Outlook links carry the right instant and open a new tab", async () => {
+  const lab = page.locator("#list li.item", { hasText: "Lab" });
+  const g = lab.getByRole("link", { name: /Google Calendar/ });
+  const href = new URL(await g.getAttribute("href"));
+  const want = await page.evaluate(
+    (v) =>
+      new Date(v)
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, ""),
+    localInput(2, 11),
+  );
+  assert(href.searchParams.get("dates").startsWith(want), href.searchParams.get("dates"));
+  assert((await g.getAttribute("target")) === "_blank", "not new tab");
+  const [popup] = await Promise.all([context.waitForEvent("page"), g.click()]);
+  await popup.close();
+  assert(/NOT saved until you press Save there/.test(await feedback()), "link feedback");
+  const o = new URL(await lab.getByRole("link", { name: /Outlook/ }).getAttribute("href"));
+  assert(o.hostname === "outlook.office.com", "outlook host");
 });
 
 await check("7. grades: midterm 0 scenario, 75% elsewhere => 60%; invalid rejected", async () => {
@@ -367,6 +417,58 @@ await check("bundled single-file build (dist/) loads and saves", async () => {
   assert(errs.length === 0, errs.join("; "));
   await p2.close();
 });
+
+await check(
+  "hosted (claude.ai artifact) variant: no native dialogs, .ics text fallback, backup via platform save",
+  async () => {
+    const p3 = await context.newPage();
+    const errs = [];
+    p3.on("pageerror", (e) => errs.push(String(e)));
+    p3.on("dialog", (d) => {
+      errs.push(`native dialog: ${d.message()}`);
+      d.dismiss();
+    });
+    // Stand-in for the platform runtime: only the "downloads" capability is served.
+    await p3.addInitScript(() => {
+      window.__saved = [];
+      window.claude = {
+        use: async (name) =>
+          name === "downloads"
+            ? {
+                save: async (req) => {
+                  window.__saved.push(req);
+                  return { status: "saved" };
+                },
+              }
+            : null,
+      };
+    });
+    await p3.goto(`${base}/__hosted`);
+    await p3.evaluate(() => localStorage.clear());
+    await p3.reload();
+    const f = { when: "", sourceRef: "SYNTHETIC hosted" };
+    f.when = localInput(5, 9);
+    await p3.selectOption("#type", "Test");
+    await p3.fill("#when", f.when);
+    await p3.selectOption("#sourceType", "D2L announcement");
+    await p3.fill("#sourceRef", f.sourceRef);
+    await p3.click("#saveBtn");
+    assert((await p3.locator("#list > li.item").count()) === 1, "not saved in hosted");
+    await p3.click("#exportAll");
+    assert(await p3.isVisible("#icsFallback"), "ics fallback hidden");
+    assert((await p3.inputValue("#icsText")).startsWith("BEGIN:VCALENDAR"), "ics text");
+    await p3.click("#backup");
+    await p3.waitForTimeout(150);
+    const saved = await p3.evaluate(() => window.__saved);
+    assert(saved.length === 1 && saved[0].filename.endsWith(".json"), JSON.stringify(saved));
+    assert(JSON.parse(saved[0].data).assessments.length === 1, "backup content");
+    await p3.click("#clearAll");
+    await p3.click("#confirmYes");
+    assert((await p3.locator("#list > li.item").count()) === 0, "clear-all failed");
+    assert(errs.length === 0, errs.join("; "));
+    await p3.close();
+  },
+);
 
 await check("no console errors or uncaught exceptions during the run", async () => {
   assert(consoleErrors.length === 0, consoleErrors.join(" | "));

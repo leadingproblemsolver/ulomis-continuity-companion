@@ -29,10 +29,20 @@ html = html.replace(
 // Sanity: bundle must parse (compile only, never executed here).
 new vm.Script(bundle, { filename: "assessment-guard-bundle.js" });
 
+// Body-only variant for hosts that wrap the page in their own document skeleton
+// (claude.ai artifacts): title + styles + body content + script, no html/head/body tags.
+const titleTag = html.match(/<title>[\s\S]*?<\/title>/)[0];
+const styleTag = html.match(/<style>[\s\S]*?<\/style>/)[0];
+const bodyInner = html.match(/<body>([\s\S]*)<\/body>/)[1];
+const hostedHtml = `${titleTag}\n<meta name="claude:viewport-fit-sides" content="cover" />\n${styleTag}\n${bodyInner}`;
+if (/<\/?(html|head|body)[\s>]/i.test(hostedHtml))
+  throw new Error("hosted variant still has skeleton tags");
+
 if (process.argv.includes("--check")) {
   console.log(`build check ok: ${names.length} core exports, ${html.length} bytes`);
 } else {
   fs.mkdirSync(path.join(root, "dist"), { recursive: true });
   fs.writeFileSync(path.join(root, "dist/assessment-guard.html"), html);
-  console.log(`wrote dist/assessment-guard.html (${html.length} bytes)`);
+  fs.writeFileSync(path.join(root, "dist/hosted.html"), hostedHtml);
+  console.log(`wrote dist/assessment-guard.html (${html.length} bytes) and dist/hosted.html`);
 }
