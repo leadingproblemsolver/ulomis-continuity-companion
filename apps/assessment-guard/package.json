@@ -1,0 +1,16 @@
+{
+  "name": "assessment-guard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Independent student tool: verify assessment dates, export .ics, check grade scenarios. No backend.",
+  "scripts": {
+    "test": "TZ=Asia/Qatar node --test test/core.test.js && TZ=America/New_York node --test test/core.test.js && TZ=UTC node --test test/core.test.js",
+    "check": "node --check src/core.js && node --check src/app.js && node scripts/build.mjs --check",
+    "build": "node scripts/build.mjs",
+    "smoke": "node test/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
