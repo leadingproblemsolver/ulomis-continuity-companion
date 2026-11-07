@@ -24,6 +24,8 @@ const initial = {
   customerNote: "Founder-reported call note: A purchasing manager said reconciliation is slow and requested a short demo.",
   developmentNote: "Founder-reported build note: Prototype compares simulated PO, delivery and invoice records. No live customer data tested.",
   assumption: "This prospect is ready to pay a monthly subscription.",
+  nextAction: "Send the requested short demo, then ask if it represents the prospect\u0027s real process.",
+  receiptExpected: "Timestamped sent-message record and actual prospect reply",
 };
 const buyerOptions = ["University clubs", "Small agencies", "Small retailers"];
 const frictionOptions = ["Important handoffs are lost", "Sales follow-ups get missed", "Records disagree across tools"];
@@ -39,6 +41,8 @@ function FounderContinuity() {
   const [customerNote, setCustomerNote] = useState(initial.customerNote);
   const [developmentNote, setDevelopmentNote] = useState(initial.developmentNote);
   const [assumption, setAssumption] = useState(initial.assumption);
+  const [nextAction, setNextAction] = useState(initial.nextAction);
+  const [receiptExpected, setReceiptExpected] = useState(initial.receiptExpected);
   const [buyer, setBuyer] = useState(buyerOptions[0]);
   const [friction, setFriction] = useState(frictionOptions[0]);
   const [access, setAccess] = useState<"none" | "one">("none");
@@ -61,6 +65,10 @@ function FounderContinuity() {
           const sourceB = parsed.record.sources[1]?.text || "";
           setObjective(parsed.record.objective);
           setAssumption(parsed.record.assumption);
+          if (parsed.mode === "continue") {
+            setNextAction(parsed.record.proposedNextAction);
+            setReceiptExpected(parsed.record.requiredReceipt);
+          }
           if (parsed.mode === "continue") {
             setCustomerNote(sourceA); setDevelopmentNote(sourceB);
           } else {
@@ -92,7 +100,7 @@ function FounderContinuity() {
   }
   function run() {
     try {
-      setRecord(reconstructFounder({mode, objective, customerNote, developmentNote, assumption, buyer, friction, access}));
+      setRecord(reconstructFounder({mode, objective, customerNote, developmentNote, assumption, nextAction, receiptExpected, buyer, friction, access}));
       setCorrection(""); setReceiptReference(""); setError("");
     } catch (exception) {
       setError(exception instanceof Error ? exception.message : "Could not reconstruct this thread.");
@@ -160,6 +168,12 @@ function FounderContinuity() {
                   </label>
                   <label className="block space-y-1.5"><span className="text-sm font-medium">Assumption to verify</span>
                     <input className={field} value={assumption} onChange={e => { setAssumption(e.target.value); invalidate(); }} maxLength={4000} />
+                  </label>
+                  <label className="block space-y-1.5"><span className="text-sm font-medium">Proposed next action · founder-specified</span>
+                    <input className={field} value={nextAction} onChange={e => { setNextAction(e.target.value); invalidate(); }} maxLength={4000} />
+                  </label>
+                  <label className="block space-y-1.5"><span className="text-sm font-medium">What would prove it happened?</span>
+                    <input className={field} value={receiptExpected} onChange={e => { setReceiptExpected(e.target.value); invalidate(); }} maxLength={4000} />
                   </label>
                 </>
               ) : (
