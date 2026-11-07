@@ -57,9 +57,9 @@ function Index() {
       <Header language={language} onLanguageChange={changeLanguage} />
       <main>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-6 lg:px-8">
-          <p className="text-sm text-muted-foreground">Have an unfinished startup thread?</p>
+          <p className="text-sm text-muted-foreground">{language === "ar" ? "هل لديك مشروع ناشئ لم يكتمل؟" : "Have an unfinished startup thread?"}</p>
           <a href="/founder" className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15">
-            Try Founder Continuity →
+            {language === "ar" ? "جرّب استمرارية المؤسس" : "Try Founder Continuity →"}
           </a>
         </div>
         <JourneyDemo language={language} />
