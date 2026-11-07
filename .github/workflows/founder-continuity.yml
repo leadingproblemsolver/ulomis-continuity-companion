@@ -25,7 +25,7 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Verify existing invariants
         run: npm run verify:invariants && npm run verify:pilot
-      - name: Typecheck
-        run: npx tsc --noEmit
-      - name: Production build
+      - name: Production build and generate route types
         run: npm run build
+      - name: Typecheck generated route tree
+        run: npx tsc --noEmit
