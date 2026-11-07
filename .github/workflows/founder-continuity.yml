@@ -1,0 +1,31 @@
+name: Founder Continuity contract
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/founder-continuity.ts'
+      - 'src/routes/founder.tsx'
+      - 'src/routes/index.tsx'
+      - 'tests/founder-continuity.test.mjs'
+      - '.github/workflows/founder-continuity.yml'
+  workflow_dispatch:
+
+jobs:
+  contract-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v4 pinned SHA
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4 pinned SHA
+        with:
+          node-version: '22'
+      - name: Verify founder domain contract
+        run: node --experimental-strip-types --test tests/founder-continuity.test.mjs
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify existing invariants
+        run: npm run verify:invariants && npm run verify:pilot
+      - name: Production build and generate route types
+        run: npm run build
+      - name: Typecheck generated route tree
+        run: npx tsc --noEmit
