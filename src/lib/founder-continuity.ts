@@ -2,7 +2,7 @@
 // No API/model calls. Facts here are founder-reported, never independently verified.
 export type Source = { id: string; kind: "customer_note" | "development_note" | "founder_choice"; text: string; verification: "founder_reported_unverified" };
 export type FounderMode = "continue" | "discover";
-export type FounderInput = { mode: FounderMode; objective: string; customerNote: string; developmentNote: string; assumption: string; buyer?: string; friction?: string; access?: "none" | "one" };
+export type FounderInput = { mode: FounderMode; objective: string; customerNote: string; developmentNote: string; assumption: string; nextAction?: string; receiptExpected?: string; buyer?: string; friction?: string; access?: "none" | "one" };
 export type FounderRecord = {
   schema: "ulomis-founder-continuity/v1";
   mode: FounderMode;
@@ -38,8 +38,8 @@ export function reconstructFounder(input: FounderInput, timestamp: string = new 
       observation: "Two founder-supplied source fragments captured. They have not been independently verified.",
       assumption: clean(input.assumption) || "No explicit market assumption supplied.",
       uncertainty: "Source accuracy, actual customer demand, willingness to pay, and execution remain unverified.",
-      proposedNextAction: "Reopen the source-backed open commitment, contact its owner, and request a concrete response or a real workflow example.",
-      requiredReceipt: "A timestamped, independently inspectable outbound message or participant response",
+      proposedNextAction: clean(input.nextAction || "") || "Review the reported customer note, confirm its open commitment with the owner, and request a concrete response.",
+      requiredReceipt: clean(input.receiptExpected || "") || "A timestamped, inspectable outbound message or participant response",
       justification: "A real external interaction tests the open loop without inventing conclusions from the notes.",
       decision: "suggested", correction: null, receipt: null, generatedAt: timestamp, acceptedAt: null,
     };
