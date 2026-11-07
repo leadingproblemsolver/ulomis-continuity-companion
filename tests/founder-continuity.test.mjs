@@ -87,3 +87,13 @@ test("long payload cannot bypass limits", () => {
   const result = reconstructFounder({...input, customerNote: "a".repeat(6000)});
   assert.equal(result.sources[0].text.length, 4000);
 });
+
+test("founder-specified action and proof are not fabricated", () => {
+  const result = reconstructFounder({...input,
+    nextAction: "Send permissioned demo to the named buyer",
+    receiptExpected: "The real sent-message ID"}, at);
+  assert.equal(result.proposedNextAction, "Send permissioned demo to the named buyer");
+  assert.equal(result.requiredReceipt, "The real sent-message ID");
+  assert.equal(result.decision, "suggested");
+  assert.equal(result.receipt, null);
+});
